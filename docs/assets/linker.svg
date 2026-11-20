@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 450" role="img"
+     aria-label="链接期符号解析动画：libngu 声明 extern rng_get，board_rng 的实现是 static 没有导出，MicroPython 导出了软件 PRNG 版本，于是链接器绑到了软件那个">
+<title>链接期符号解析：绑错的那一步</title>
+<style>
+  .bg{fill:#fbfaf8}
+  .card{fill:#fff;stroke:#d8d2c8;stroke-width:1.5}
+  .t{fill:#2b2825;font-family:ui-sans-serif,system-ui,sans-serif}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .mute{fill:#7d766c}
+  .bad{fill:#b4232a} .badS{stroke:#b4232a} .ok{fill:#1f7a4d} .okS{stroke:#1f7a4d}
+  .dim{fill:#f2efe9;stroke:#d8d2c8}
+  @media (prefers-color-scheme: dark){
+    .bg{fill:#17161a} .card{fill:#22212a;stroke:#3b3947} .t{fill:#eceaf2} .mute{fill:#9c97aa}
+    .bad{fill:#ff8a8a} .badS{stroke:#ff8a8a} .ok{fill:#6ee7a8} .okS{stroke:#6ee7a8}
+    .dim{fill:#242330;stroke:#3b3947}
+  }
+</style>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+  <path d="M0 0 L10 5 L0 10 z" class="bad"/></marker></defs>
+<rect class="bg" width="760" height="450"/>
+
+<text class="t" x="24" y="28" font-size="15" font-weight="600">链接器要找一个叫 rng_get 的全局符号 —— 而它只找到一个候选</text>
+<text class="mute t" x="24" y="48" font-size="12">Coldcard，2021-03 → 2026-07，1,962 天</text>
+
+<rect class="card" x="24" y="76" width="200" height="92" rx="8"/>
+<text class="mute t mono" x="36" y="96" font-size="10.5">libngu.o（要一个）</text>
+<text class="t mono" x="36" y="118" font-size="11.5">extern uint32_t</text>
+<text class="t mono" x="36" y="134" font-size="11.5">  rng_get(void);</text>
+<text class="bad t mono" x="36" y="156" font-size="11" font-weight="600">U rng_get</text>
+
+<rect class="card" x="280" y="76" width="200" height="92" rx="8"/>
+<text class="mute t mono" x="292" y="96" font-size="10.5">board_rng.o（候选一）</text>
+<text class="mute t mono" x="292" y="118" font-size="11.5">static uint32_t</text>
+<text class="mute t mono" x="292" y="134" font-size="11.5">  rng_get_or_fault()</text>
+<text class="mute t mono" x="292" y="156" font-size="11">（没导出任何符号）</text>
+<text class="ok t" x="280" y="188" font-size="11">↑ 真的硬件 TRNG —— 它一直是好的，只是没人叫得到它</text>
+
+<rect class="card badS" x="536" y="76" width="200" height="92" rx="8" stroke-width="2"/>
+<text class="mute t mono" x="548" y="96" font-size="10.5">micropython_rng.o（候选二）</text>
+<text class="t mono" x="548" y="118" font-size="11.5">uint32_t</text>
+<text class="t mono" x="548" y="134" font-size="11.5">  rng_get(void)</text>
+<text class="bad t mono" x="548" y="156" font-size="11" font-weight="600">T rng_get ← 导出了</text>
+
+<!-- 探针：只有这个在动 -->
+<g>
+  <path class="badS" d="M232 118 L272 118" stroke-width="2.5" fill="none" marker-end="url(#ar)">
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;.08;.3;.38;1" dur="6s" repeatCount="indefinite"/>
+  </path>
+  <path class="badS" d="M232 118 L272 118" stroke-width="2.5" fill="none" marker-end="url(#ar)">
+    <animate attributeName="opacity" values="0;0;1;1;1" keyTimes="0;.4;.48;.95;1" dur="6s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate" values="0,0;256,0" dur=".5s" begin="2.4s" fill="freeze" repeatCount="1"/>
+  </path>
+  <text class="mute t" x="300" y="66" font-size="11.5">× 看不见（static）
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;.2;.36;.44;1" dur="6s" repeatCount="indefinite"/></text>
+  <text class="bad t" x="566" y="66" font-size="11.5" font-weight="600">✓ 绑定
+    <animate attributeName="opacity" values="0;0;1;1" keyTimes="0;.48;.56;1" dur="6s" repeatCount="indefinite"/></text>
+</g>
+
+<rect class="card badS" x="24" y="212" width="712" height="88" rx="8" stroke-width="2"/>
+<text class="mute t" x="40" y="234" font-size="11">结果</text>
+<text class="ok t" x="40" y="258" font-size="13">本来：<tspan class="mono">rng_get() ^ sw_prng()</tspan> = 物理噪声 XOR 软件生成器 = 不可预测</text>
+<text class="bad t" x="40" y="280" font-size="13" font-weight="600">实际：软件 PRNG ^ 软件 PRNG = 可预测。搜索空间 2²²，单张 4090 跑 3 秒。</text>
+<text class="mute t" x="40" y="294" font-size="10.5">XOR 不生产随机性 —— 它只搅拌。两个操作数都弱，结果就弱。</text>
+
+<rect class="dim" x="24" y="318" width="712" height="106" rx="8"/>
+<text class="t" x="40" y="342" font-size="13" font-weight="600">反事实：如果 board_rng.o 也导出了 rng_get 会怎样</text>
+<text class="ok t mono" x="40" y="366" font-size="11">ld: duplicate symbol '_rng_get' in:</text>
+<text class="ok t mono" x="40" y="382" font-size="11">    micropython_rng.o / board_rng_exported.o</text>
+<text class="t" x="40" y="406" font-size="12">构建会在 2021 年 3 月那天直接红掉，没有人会丢一分钱。</text>
+<text class="bad t" x="40" y="420" font-size="12" font-weight="600">「这次失败，恰恰来自那个冲突的缺席。」<tspan class="mute" font-weight="400">—— Wizardsardine</tspan></text>
+</svg>

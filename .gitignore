@@ -1,0 +1,7 @@
+build/
+build_guard1/
+__pycache__/
+*.pyc
+.DS_Store
+lessons/12_prediction/samples/ai/
+artifact/

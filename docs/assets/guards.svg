@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 330" role="img"
+     aria-label="五道保险都在检查输出，没有一道在检查来源">
+<title>五道保险，五道都在检查输出</title>
+<style>
+  .bg{fill:#fbfaf8}
+  .t{fill:#2b2825;font-family:ui-sans-serif,system-ui,sans-serif}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .mute{fill:#7d766c}
+  .card{fill:#fff;stroke:#d8d2c8;stroke-width:1.5}
+  .bad{fill:#b4232a} .badS{stroke:#b4232a} .ok{fill:#1f7a4d} .okS{stroke:#1f7a4d}
+  .pipe{stroke:#d8d2c8;stroke-width:2}
+  @media (prefers-color-scheme: dark){
+    .bg{fill:#17161a} .t{fill:#eceaf2} .mute{fill:#9c97aa}
+    .card{fill:#22212a;stroke:#3b3947} .pipe{stroke:#3b3947}
+    .bad{fill:#ff8a8a} .badS{stroke:#ff8a8a} .ok{fill:#6ee7a8} .okS{stroke:#6ee7a8}
+  }
+  /* 一次性依次出现，然后冻结 —— 任何时刻都读得全 */
+  @keyframes tick{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+  .g1,.g2,.g3,.g4,.g5,#src{animation:tick .5s ease both}
+  .g2{animation-delay:.35s} .g3{animation-delay:.7s}
+  .g4{animation-delay:1.05s} .g5{animation-delay:1.4s} #src{animation-delay:1.9s}
+  @media (prefers-reduced-motion: reduce){.g1,.g2,.g3,.g4,.g5,#src{animation:none}}
+</style>
+<rect class="bg" width="880" height="330"/>
+<text class="t" x="24" y="28" font-size="15" font-weight="600">五道保险，五道都没响</text>
+<text class="mute t" x="24" y="48" font-size="12">共同点：它们全都在检查「字节长什么样」，没有一道在问「字节是从哪来的」。</text>
+
+<!-- 来源 -->
+<rect class="card badS" x="24" y="74" width="150" height="54" rx="8" stroke-width="2"/>
+<text class="bad t" x="36" y="96" font-size="12" font-weight="600">来源（坏在这）</text>
+<text class="mute t mono" x="36" y="116" font-size="10">软件 PRNG，不是 TRNG</text>
+
+<line class="pipe" x1="178" y1="101" x2="214" y2="101"/>
+<rect class="card" x="218" y="74" width="120" height="54" rx="8"/>
+<text class="t" x="230" y="96" font-size="12">字节</text>
+<text class="mute t mono" x="230" y="116" font-size="10">看起来很随机</text>
+<line class="pipe" x1="342" y1="101" x2="378" y2="101"/>
+
+<!-- 五道检查 -->
+<g font-size="10.5">
+  <g class="g1"><rect class="card" x="382" y="62" width="474" height="26" rx="5"/>
+    <text class="t mono" x="392" y="79">① #ifndef MICROPY_HW_ENABLE_RNG</text>
+    <text class="bad" x="700" y="79">测「有没有定义」，不测值</text></g>
+  <g class="g2"><rect class="card" x="382" y="92" width="474" height="26" rx="5"/>
+    <text class="t mono" x="392" y="109">② if (chip == last) fail hard</text>
+    <text class="bad" x="700" y="109">只比前后两个字</text></g>
+  <g class="g3"><rect class="card" x="382" y="122" width="474" height="26" rx="5"/>
+    <text class="t mono" x="392" y="139">③ assert len(set(seed)) &gt; 4</text>
+    <text class="bad" x="700" y="139">测多样性，不测可预测</text></g>
+  <g class="g4"><rect class="card" x="382" y="152" width="474" height="26" rx="5"/>
+    <text class="t mono" x="392" y="169">④ #if MICROPY_HW_ENABLE_RNG</text>
+    <text class="bad" x="700" y="169">守错了一侧</text></g>
+  <g class="g5"><rect class="card" x="382" y="182" width="474" height="26" rx="5"/>
+    <text class="t mono" x="392" y="199">⑤ Dieharder 统计检验</text>
+    <text class="bad" x="700" y="199">在模拟器上取主机 libc</text></g>
+</g>
+<text class="bad t" x="382" y="228" font-size="12" font-weight="600">五道全部「通过」。钱还是丢了。</text>
+
+<!-- 正确形状 -->
+<g id="src">
+  <rect class="card okS" x="24" y="250" width="832" height="62" rx="8" stroke-width="2"/>
+  <text class="ok t" x="40" y="272" font-size="12.5" font-weight="600">
+    唯一正确形状的检查（commit 099b72f5，2026-08，当时还没发版）：</text>
+  <text class="t" x="40" y="294" font-size="12">
+    开机数一下 rng_get() 到底从<tspan font-weight="600">硬件读取路径</tspan>上拉了几个字，数不对就变砖。
+    <tspan class="ok" font-weight="600">验证路径，不要验证分布。</tspan></text>
+</g>
+</svg>

@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>这次失败，恰恰来自那个冲突的缺席 · 第 07 课</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* 版面：单栏阅读流，顶部固定导航；大白话卡片用左侧强调线和更大的字号把它顶到最前面 */
+:root{
+  --bg:#f7f6f3; --surface:#fff; --surface-2:#f0eee9;
+  --ink:#1b1a19; --muted:#6f6a63; --rule:#e2ded6;
+  --accent:#2d5d7c; --weak:#a32d2f; --sound:#1f6f4a; --warnbg:#fdf6ec;
+  --display:"Space Grotesk","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --body:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#131316; --surface:#1c1c21; --surface-2:#232329;
+  --ink:#e8e6e3; --muted:#9a958e; --rule:#2e2e36;
+  --accent:#7fb3d5; --weak:#ff8f8a; --sound:#6fd9a4; --warnbg:#262017;
+  color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#131316; --surface:#1c1c21; --surface-2:#232329;
+  --ink:#e8e6e3; --muted:#9a958e; --rule:#2e2e36;
+  --accent:#7fb3d5; --weak:#ff8f8a; --sound:#6fd9a4; --warnbg:#262017;
+  color-scheme:dark; }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);
+  font-size:16.5px;line-height:1.75;-webkit-text-size-adjust:100%}
+.wrap{max-width:760px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 72px}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+
+/* 顶栏 */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;
+  background:var(--bg);border-bottom:1px solid var(--rule)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);
+  z-index:21;background:var(--bg)}
+.topbar .wrap{display:flex;align-items:center;gap:12px;padding-block:10px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:700;font-size:14.5px;letter-spacing:.01em;
+  color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand span{color:var(--muted);font-weight:500}
+.topnav{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}
+.topnav a{font-family:var(--mono);font-size:12px;text-decoration:none;color:var(--muted);
+  padding:3px 7px;border-radius:4px;min-width:28px;text-align:center}
+.topnav a:hover{background:var(--surface-2);color:var(--ink)}
+.topnav a[aria-current]{background:var(--accent);color:var(--bg);font-weight:600}
+
+/* 课头 */
+.lesson-head{padding-block:40px 8px;border-bottom:1px solid var(--rule);margin-bottom:32px}
+.kicker{font-family:var(--mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 10px}
+h1{font-family:var(--display);font-size:clamp(28px,6vw,40px);line-height:1.2;margin:0 0 10px;
+  letter-spacing:-.015em;text-wrap:balance;font-weight:700}
+.sub{color:var(--muted);font-size:14.5px;margin:0 0 28px;font-family:var(--mono)}
+
+/* 大白话 */
+.plain{background:var(--surface);border:1px solid var(--rule);border-left:4px solid var(--accent);
+  border-radius:0 10px 10px 0;padding:22px 24px;margin:0 0 40px;font-size:17.5px;line-height:1.8}
+.plain .tag{display:block;font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:12px;font-weight:600}
+.plain p{margin:0 0 16px}
+.plain p:last-child{margin-bottom:0}
+.plain blockquote{margin:16px 0;padding:12px 16px;background:var(--surface-2);border-radius:8px;
+  font-family:var(--mono);font-size:14px;line-height:1.7;border:0}
+
+h2{font-family:var(--display);font-size:22px;margin:44px 0 14px;letter-spacing:-.01em;text-wrap:balance}
+h3{font-family:var(--display);font-size:17.5px;margin:34px 0 10px;letter-spacing:-.005em}
+h4{font-family:var(--display);font-size:15.5px;margin:0 0 8px}
+p{margin:0 0 16px}
+ul,ol,dl{margin:0 0 16px;padding-left:1.4em}
+li{margin:0 0 8px}
+dl{padding-left:0} dt{font-weight:600;margin-top:12px} dd{margin:0 0 8px 1.2em;color:var(--muted)}
+strong{font-weight:650}
+blockquote{margin:20px 0;padding:14px 18px;border-left:3px solid var(--rule);
+  color:var(--ink);background:var(--surface);border-radius:0 8px 8px 0}
+blockquote cite{display:block;margin-top:8px;font-style:normal;font-size:13.5px;color:var(--muted)}
+code{font-family:var(--mono);font-size:.88em;background:var(--surface-2);
+  padding:.12em .36em;border-radius:4px;word-break:break-word}
+pre{background:var(--surface);border:1px solid var(--rule);border-radius:9px;
+  padding:14px 16px;overflow-x:auto;margin:0 0 16px}
+pre code{background:none;padding:0;font-size:13px;line-height:1.65;white-space:pre}
+
+/* 表 */
+.tw{overflow-x:auto;margin:0 0 20px;border:1px solid var(--rule);border-radius:9px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:0}
+th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--display);font-weight:600;font-size:13.5px;background:var(--surface-2);
+  white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td:first-child{font-variant-numeric:tabular-nums}
+
+/* 提示块 */
+.callout{background:var(--surface);border:1px solid var(--rule);border-radius:10px;
+  padding:18px 20px;margin:0 0 20px}
+.callout p:last-child,.callout ul:last-child,.callout ol:last-child{margin-bottom:0}
+.callout.warn{background:var(--warnbg);border-color:color-mix(in srgb,var(--weak) 30%,var(--rule))}
+.callout.good{border-color:color-mix(in srgb,var(--sound) 40%,var(--rule))}
+
+/* 动图 */
+figure{margin:28px 0;border:1px solid var(--rule);border-radius:10px;overflow:hidden;
+  background:var(--surface)}
+figure svg,figure img{display:block;width:100%;height:auto;max-width:100%}
+figcaption{padding:11px 16px;font-size:13.5px;color:var(--muted);border-top:1px solid var(--rule);
+  background:var(--surface-2)}
+
+/* 跑一下 */
+.run{margin:0 0 20px}
+.run-item{border:1px solid var(--rule);border-radius:9px;margin:0 0 12px;overflow:hidden;
+  background:var(--surface)}
+.cmdbar{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-2);
+  border-bottom:1px solid var(--rule)}
+.cmdbar code{background:none;padding:0;font-size:13px;flex:1;min-width:0;overflow-x:auto;
+  white-space:pre}
+.copy{flex:none;font-family:var(--mono);font-size:11.5px;border:1px solid var(--rule);
+  background:var(--surface);color:var(--muted);border-radius:5px;padding:3px 9px;cursor:pointer}
+.copy:hover{color:var(--ink);border-color:var(--accent)}
+.copy[data-done]{color:var(--sound);border-color:var(--sound)}
+.run-item p{margin:0;padding:11px 14px;font-size:14.5px;color:var(--muted)}
+
+/* 证据分级 */
+.ev{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:999px;
+  border:1px solid currentColor;white-space:nowrap}
+.ev-s{color:var(--sound)} .ev-m{color:var(--accent)} .ev-w{color:var(--weak)}
+
+/* 带走 */
+.takeaway{background:var(--surface-2);border-radius:10px;padding:20px 22px;margin:36px 0 0;
+  border:1px solid var(--rule)}
+.takeaway .tag{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);display:block;margin-bottom:10px}
+.takeaway p:last-child{margin-bottom:0}
+
+/* 上一课 / 下一课 */
+.pager{display:flex;gap:12px;margin-top:48px;padding-top:24px;border-top:1px solid var(--rule);
+  flex-wrap:wrap}
+.pager a{flex:1 1 220px;min-width:0;text-decoration:none;border:1px solid var(--rule);
+  border-radius:10px;padding:14px 16px;background:var(--surface);color:var(--ink)}
+.pager a:hover{border-color:var(--accent)}
+.pager .dir{display:block;font-family:var(--mono);font-size:11.5px;color:var(--muted);
+  margin-bottom:4px}
+.pager .ttl{font-family:var(--display);font-size:15px;font-weight:600}
+.pager .next{text-align:right}
+
+/* 首页 */
+.hero{padding-block:48px 8px}
+.toc{display:grid;gap:10px;margin:0 0 40px;padding:0;list-style:none}
+.toc a{display:flex;gap:14px;align-items:baseline;text-decoration:none;border:1px solid var(--rule);
+  border-radius:10px;padding:14px 16px;background:var(--surface);color:var(--ink)}
+.toc a:hover{border-color:var(--accent)}
+.toc .num{font-family:var(--mono);font-size:13px;color:var(--accent);flex:none;font-weight:600}
+.toc .body{min-width:0}
+.toc .ttl{font-family:var(--display);font-weight:600;font-size:16px;display:block;line-height:1.4}
+.toc .sub2{font-size:13.5px;color:var(--muted);display:block;margin-top:2px}
+.disclaim{border:1px solid color-mix(in srgb,var(--weak) 35%,var(--rule));border-radius:10px;
+  padding:16px 18px;margin:0 0 32px;background:var(--warnbg);font-size:14.5px}
+.disclaim strong{color:var(--weak)}
+footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--rule);
+  font-size:13.5px;color:var(--muted)}
+footer a{color:var(--muted)}
+@media (max-width:520px){
+  body{font-size:16px}
+  .plain{font-size:16.5px;padding:18px 18px}
+  .brand span{display:none}
+  .topbar .wrap{padding-block:8px;gap:8px;flex-wrap:nowrap}
+  .topnav{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  .topnav::-webkit-scrollbar{display:none}
+  .topnav a{font-size:11.5px;padding:3px 6px;min-width:0;flex:none}
+}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="wrap"><a class="brand" href="index.html">弱熵的统一规律 <span>· 一门可以自己跑的课</span></a><nav class="topnav"><a href="index.html">目录</a><a href="01-milk-sad.html" title="强随机数没有「第一个钱包」">01</a><a href="02-ill-bloom.html" title="一个坏掉的随机数，活了十二年">02</a><a href="03-trust-wallet.html" title="2³² 到底有多小">03</a><a href="04-cake-wallet.html" title="不安全的那个是默认值">04</a><a href="05-php-mt-rand.html" title="同一段代码，三个弱钱包范围">05</a><a href="06-brainwallet.html" title="人选的口令">06</a><a href="07-coldcard.html" aria-current="page" title="这次失败，恰恰来自那个冲突的缺席">07</a><a href="08-xor.html" title="XOR 不生产随机性">08</a><a href="09-pbkdf2.html" title="PBKDF2 救不了你">09</a><a href="10-five-guards.html" title="五道保险，五道都没响">10</a><a href="11-attacker-tempo.html" title="攻击者的节奏">11</a><a href="12-prediction.html" title="一个可证伪的赌注">12</a></nav></div></header>
+<main class="wrap">
+<div class="lesson-head">
+<p class="kicker">第 07 课 / 共 12 课</p>
+<h1>这次失败，恰恰来自那个冲突的缺席</h1>
+<p class="sub">Coldcard · 2021-03 → 2026-07 · 本课最难也最值钱</p>
+</div>
+<div class="plain"><span class="tag">大白话</span><p>史上最大的硬件钱包损失，<strong>不是因为设备被攻破</strong>。设备好得很。</p>
+<p>Coldcard 是最偏执的那一类比特币签名器：只做比特币、air-gap、安全元件、可复现构建。<br>它芯片里那个真随机数发生器一直是好的。<br>代码打算做的事情也完全正确：读硬件随机数，再和一个软件生成器混合 —— 标准加固做法。</p>
+<p>但那个「读硬件随机数」的调用，在<strong>链接</strong>的时候接错了地方。</p>
+<p>它接到了 MicroPython 里一个「给没有硬件随机数的单片机用的」软件生成器上。</p>
+<p>于是：本来要把物理噪声和软件生成器混在一起的操作，<br>变成了<strong>把两个软件生成器混在一起</strong>。而这等于什么都没混。</p>
+<p><strong>门 2（设备）是好的。门 1（造钥匙）塌了。<br>而只有门 1 的失败是静默的，所以它塌了五年多没人发现。</strong></p></div>
+<figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 450" role="img"
+     aria-label="链接期符号解析动画：libngu 声明 extern rng_get，board_rng 的实现是 static 没有导出，MicroPython 导出了软件 PRNG 版本，于是链接器绑到了软件那个">
+<title>链接期符号解析：绑错的那一步</title>
+<style>
+  .bg{fill:#fbfaf8}
+  .card{fill:#fff;stroke:#d8d2c8;stroke-width:1.5}
+  .t{fill:#2b2825;font-family:ui-sans-serif,system-ui,sans-serif}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .mute{fill:#7d766c}
+  .bad{fill:#b4232a} .badS{stroke:#b4232a} .ok{fill:#1f7a4d} .okS{stroke:#1f7a4d}
+  .dim{fill:#f2efe9;stroke:#d8d2c8}
+  @media (prefers-color-scheme: dark){
+    .bg{fill:#17161a} .card{fill:#22212a;stroke:#3b3947} .t{fill:#eceaf2} .mute{fill:#9c97aa}
+    .bad{fill:#ff8a8a} .badS{stroke:#ff8a8a} .ok{fill:#6ee7a8} .okS{stroke:#6ee7a8}
+    .dim{fill:#242330;stroke:#3b3947}
+  }
+</style>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+  <path d="M0 0 L10 5 L0 10 z" class="bad"/></marker></defs>
+<rect class="bg" width="760" height="450"/>
+
+<text class="t" x="24" y="28" font-size="15" font-weight="600">链接器要找一个叫 rng_get 的全局符号 —— 而它只找到一个候选</text>
+<text class="mute t" x="24" y="48" font-size="12">Coldcard，2021-03 → 2026-07，1,962 天</text>
+
+<rect class="card" x="24" y="76" width="200" height="92" rx="8"/>
+<text class="mute t mono" x="36" y="96" font-size="10.5">libngu.o（要一个）</text>
+<text class="t mono" x="36" y="118" font-size="11.5">extern uint32_t</text>
+<text class="t mono" x="36" y="134" font-size="11.5">  rng_get(void);</text>
+<text class="bad t mono" x="36" y="156" font-size="11" font-weight="600">U rng_get</text>
+
+<rect class="card" x="280" y="76" width="200" height="92" rx="8"/>
+<text class="mute t mono" x="292" y="96" font-size="10.5">board_rng.o（候选一）</text>
+<text class="mute t mono" x="292" y="118" font-size="11.5">static uint32_t</text>
+<text class="mute t mono" x="292" y="134" font-size="11.5">  rng_get_or_fault()</text>
+<text class="mute t mono" x="292" y="156" font-size="11">（没导出任何符号）</text>
+<text class="ok t" x="280" y="188" font-size="11">↑ 真的硬件 TRNG —— 它一直是好的，只是没人叫得到它</text>
+
+<rect class="card badS" x="536" y="76" width="200" height="92" rx="8" stroke-width="2"/>
+<text class="mute t mono" x="548" y="96" font-size="10.5">micropython_rng.o（候选二）</text>
+<text class="t mono" x="548" y="118" font-size="11.5">uint32_t</text>
+<text class="t mono" x="548" y="134" font-size="11.5">  rng_get(void)</text>
+<text class="bad t mono" x="548" y="156" font-size="11" font-weight="600">T rng_get ← 导出了</text>
+
+<!-- 探针：只有这个在动 -->
+<g>
+  <path class="badS" d="M232 118 L272 118" stroke-width="2.5" fill="none" marker-end="url(#ar)">
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;.08;.3;.38;1" dur="6s" repeatCount="indefinite"/>
+  </path>
+  <path class="badS" d="M232 118 L272 118" stroke-width="2.5" fill="none" marker-end="url(#ar)">
+    <animate attributeName="opacity" values="0;0;1;1;1" keyTimes="0;.4;.48;.95;1" dur="6s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate" values="0,0;256,0" dur=".5s" begin="2.4s" fill="freeze" repeatCount="1"/>
+  </path>
+  <text class="mute t" x="300" y="66" font-size="11.5">× 看不见（static）
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;.2;.36;.44;1" dur="6s" repeatCount="indefinite"/></text>
+  <text class="bad t" x="566" y="66" font-size="11.5" font-weight="600">✓ 绑定
+    <animate attributeName="opacity" values="0;0;1;1" keyTimes="0;.48;.56;1" dur="6s" repeatCount="indefinite"/></text>
+</g>
+
+<rect class="card badS" x="24" y="212" width="712" height="88" rx="8" stroke-width="2"/>
+<text class="mute t" x="40" y="234" font-size="11">结果</text>
+<text class="ok t" x="40" y="258" font-size="13">本来：<tspan class="mono">rng_get() ^ sw_prng()</tspan> = 物理噪声 XOR 软件生成器 = 不可预测</text>
+<text class="bad t" x="40" y="280" font-size="13" font-weight="600">实际：软件 PRNG ^ 软件 PRNG = 可预测。搜索空间 2²²，单张 4090 跑 3 秒。</text>
+<text class="mute t" x="40" y="294" font-size="10.5">XOR 不生产随机性 —— 它只搅拌。两个操作数都弱，结果就弱。</text>
+
+<rect class="dim" x="24" y="318" width="712" height="106" rx="8"/>
+<text class="t" x="40" y="342" font-size="13" font-weight="600">反事实：如果 board_rng.o 也导出了 rng_get 会怎样</text>
+<text class="ok t mono" x="40" y="366" font-size="11">ld: duplicate symbol '_rng_get' in:</text>
+<text class="ok t mono" x="40" y="382" font-size="11">    micropython_rng.o / board_rng_exported.o</text>
+<text class="t" x="40" y="406" font-size="12">构建会在 2021 年 3 月那天直接红掉，没有人会丢一分钱。</text>
+<text class="bad t" x="40" y="420" font-size="12" font-weight="600">「这次失败，恰恰来自那个冲突的缺席。」<tspan class="mute" font-weight="400">—— Wizardsardine</tspan></text>
+</svg><figcaption>链接器要找一个叫 rng_get 的全局符号 —— 而它只找到一个候选。</figcaption></figure>
+<h2>往下一层</h2>
+<h3>精确的位置</h3>
+<ol>
+<li>Coinkite 自家的密码库里写的是 <code>extern uint32_t rng_get(void);</code> ——
+<strong>声明有这么个函数，但不说它在哪</strong>。由链接器去找一个叫 <code>rng_get</code> 的全局符号。</li>
+<li>Coldcard 板子自己的代码<strong>确实</strong>读硬件寄存器。但那个读取函数被声明成了
+<code>static</code> —— 对别的编译单元不可见，<strong>所以它没有导出 <code>rng_get</code> 这个符号</strong>。</li>
+<li>MicroPython <strong>导出了</strong>一个全局 <code>rng_get</code>。它的实现是一个软件 PRNG，
+注释里写得明明白白：这是给「没有 RNG 的 MCU」准备的。</li>
+<li>链接器于是绑到了它。</li>
+</ol>
+<blockquote>链接器在这里并不是在两个候选里挑了一个，这里只有一个候选。
+要是 Coinkite 导出了自己的 <code>rng_get</code>，就会有两个同名全局定义，构建会直接报
+duplicate symbol 失败。<strong>这次失败，恰恰来自那个冲突的缺席。</strong>
+<cite>—— Wizardsardine</cite></blockquote>
+
+<h3>这一课可以真的跑</h3>
+<p>课程里有一个最小的 C 工程 + Makefile，用你自己机器上的编译器把这个失效原理完整复现：</p>
+<ul>
+<li><code>make broken</code> —— 复现那个构建。链接成功，没有警告。跑三次，<strong>三次种子一模一样</strong>。</li>
+<li><code>make duplicate</code> —— 把 <code>static</code> 去掉。
+<strong>构建直接因 duplicate symbol 失败</strong>。这就是本课的全部。</li>
+<li><code>make archive</code> —— 一个更阴的变体：同样两个定义，打包成 <code>.a</code> 之后
+<strong>链接器不报错了，先出现的赢</strong>。你的钱包是否安全取决于构建脚本里两个库的先后顺序。</li>
+<li><code>make fixed</code> —— Coinkite 的真实修复，全部发生在构建期。</li>
+<li><code>make verify</code> —— 那个 <code>nm</code> 校验脚本。<strong>验证路径，不要验证分布。</strong></li>
+</ul>
+
+<h3>种子里有什么</h3>
+<p>那个软件 PRNG 的种子只有两个输入，而且是 XOR 进<strong>同一个 32 位字</strong>里的（所以不叠加）：</p>
+<ul>
+<li><strong>芯片唯一标识符的 32 位</strong> —— 这些位编码的是晶片<strong>在晶圆上的坐标</strong>。
+这个值既不变，也不保密。</li>
+<li><strong>SysTick</strong> —— 一个每毫秒回绕一次的计数器。</li>
+</ul>
+<p>Mk2/Mk3 上另一个本该贡献 24.4 位的 RTC <strong>价值为零</strong> ——
+它指向一个固件从来没启动过的振荡器。</p>
+<p>枚举结果：<strong>Mk3 上 4,456,448 个起始状态 = 2²².⁰⁹</strong>。
+单张 RTX 4090 跑 <strong>3 秒</strong>。</p>
+
+<h3>最该读的一条对比</h3>
+<p>Mk4/Mk5/Q 约 2⁵²，约 95 年。<strong>3 秒 vs 95 年不是「程度」的差别，是「种类」的差别。</strong>
+这 29.5 位的差距<strong>完全来自安全元件那 32 位的 reseed</strong> ——
+Wizardsardine 的原话：<strong>它是这整条链里唯一一个真正起了作用的机制。</strong></p>
+<p>所以门 2 不是没用。门 2 是在门 1 塌了之后，唯一还在承重的东西。</p>
+
+<h3>骰子为什么救了人</h3>
+<p>在这次事故里，<strong>唯一完全没有风险的用户，是那些不相信设备随机数、自己掷了骰子的人。</strong>
+在纯骰子路径上，哈希累加器从空字符串开始，只吃掷骰结果 —— 设备的熵根本没进来。</p>
+<p>Coinkite 的官方阈值：<strong>50–98 次</strong>独立私密公平的掷骰 → 骰子单独贡献至少 128 位；
+<strong>99 次以上</strong> → 约 256 位；<strong>少于 50 次或者记不清</strong> → 必须迁移。</p>
+<div class="callout warn">
+<p><strong>但混合模式有两个坑：</strong>那个「拒绝某一面占比超过 30%」的分布检查只在某个参数为真时才生效；
+而从词表界面进入的混合模式<strong>同时关掉了那个检查和最少次数要求</strong>。</p>
+<p>→ 「我掷了骰子」这句话本身不够，<strong>得知道是从哪个入口掷的</strong>。</p>
+</div>
+<h2>自己跑一下</h2>
+<div class="run">
+<div class="run-item"><div class="cmdbar"><code>cd lessons/07_coldcard_link &amp;&amp; make all</code><button class="copy" type="button">复制</button></div><p>broken → duplicate → archive → fixed → verify，五个构建依次跑完。</p></div>
+<div class="run-item"><div class="cmdbar"><code>python3 lessons/07_coldcard_link/enumerate_mk3.py</code><button class="copy" type="button">复制</button></div><p>把 2²² 那个空间的大小、碰撞概率、爆破成本全部算一遍。</p></div>
+</div>
+<h2>数字与出处</h2>
+<div class="tw"><table><thead><tr><th>数字</th><th>是什么</th><th>出处</th><th>证据</th></tr></thead><tbody>
+<tr><td><strong>1,962 天</strong></td><td>第一个脆弱发布版（4.0.0，2021-03-17）→ 修复（2026-07-31）</td><td>Coinkite / Wizardsardine</td><td><span class="ev ev-s">很强</span></td></tr>
+<tr><td><strong>2²² = 3 秒</strong></td><td>Mk3 搜索空间 / 单张 4090 耗时，成本可忽略</td><td>Wizardsardine 2026-08-11</td><td><span class="ev ev-s">很强</span></td></tr>
+<tr><td><strong>29.5 位</strong></td><td>Mk3 与 Mk4/5/Q 的差距，全部来自安全元件的 reseed</td><td>Wizardsardine</td><td><span class="ev ev-s">很强</span></td></tr>
+<tr><td><strong>68 台</strong></td><td>出现两台读到同一芯片标识字的 1/2 概率点</td><td>Wizardsardine</td><td><span class="ev ev-s">很强</span></td></tr>
+<tr><td><strong>50 / 99 次</strong></td><td>骰子阈值（128 位 / 256 位）</td><td>Coinkite 官方公告</td><td><span class="ev ev-s">很强</span></td></tr>
+<tr><td><strong>约 $1.16 亿</strong></td><td>损失金额</td><td>二手，各来源从 $7,500 万漂到 $1.3 亿；官方不给总额</td><td><span class="ev ev-w">弱 — 不要单独使用</span></td></tr>
+</tbody></table></div>
+<div class="takeaway"><span class="tag">带走这个</span><p><strong>受影响固件区间（Coinkite 官方）</strong>：Mk2/Mk3 的 4.0.1 到 4.1.9 含；Mk4/Mk5 在 5.6.0 之前；<br>Q 在 1.5.0Q 之前；Edge 轨道分别是 6.6.0X / 6.6.0QX。</p>
+<p>⚠️ Coinkite 特别警告：<strong>Edge 和标准是两条独立发布轨，不要因为 Edge 的版本号数字更大就以为它修了。</strong></p>
+<p>本课全部材料来自外部公开出处（Coinkite 公告、Wizardsardine 两篇、Coinspect/Unlukey）。</p></div>
+<nav class="pager">
+<a href="06-brainwallet.html"><span class="dir">← 上一课</span><span class="ttl">人选的口令</span></a>
+<a class="next" href="08-xor.html"><span class="dir">下一课 →</span><span class="ttl">XOR 不生产随机性</span></a>
+</nav>
+<div class="disclaim"><strong>免责：</strong>本课复现的是<strong>已被公开披露并已修复</strong>的历史缺陷，用于教学。固定 demo 种子，不联网，不碰任何真实密钥。如果你怀疑自己的钱包受影响，不要用这里的代码去验证 —— 去看厂商官方公告。</div><footer><p>弱熵的统一规律 · 代码与动图：<a href="https://github.com/aaron-recompile/weak-entropy-lessons">GitHub</a>。每一课的代码都能用 <code>python3</code> 一行跑出结果。</p><p>所有数字带出处和证据分级。标「弱」的不要单独使用。</p></footer>
+</main>
+<script>
+document.querySelectorAll('.copy').forEach(function(b){
+  b.addEventListener('click', function(){
+    var t = b.closest('.cmdbar').querySelector('code').textContent;
+    function done(){ b.dataset.done='1'; b.textContent='已复制';
+      setTimeout(function(){ delete b.dataset.done; b.textContent='复制'; }, 1600); }
+    try {
+      navigator.clipboard.writeText(t).then(done, select);
+    } catch(e){ select(); }
+    function select(){
+      var r=document.createRange(); r.selectNodeContents(b.closest('.cmdbar').querySelector('code'));
+      var s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent='已选中，按 ⌘C';
+      setTimeout(function(){ b.textContent='复制'; }, 2400);
+    }
+  });
+});
+</script>
+</body>
+</html>

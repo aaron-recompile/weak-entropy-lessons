@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>同一段代码，三个弱钱包范围 · 第 05 课</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* 版面：单栏阅读流，顶部固定导航；大白话卡片用左侧强调线和更大的字号把它顶到最前面 */
+:root{
+  --bg:#f7f6f3; --surface:#fff; --surface-2:#f0eee9;
+  --ink:#1b1a19; --muted:#6f6a63; --rule:#e2ded6;
+  --accent:#2d5d7c; --weak:#a32d2f; --sound:#1f6f4a; --warnbg:#fdf6ec;
+  --display:"Space Grotesk","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --body:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#131316; --surface:#1c1c21; --surface-2:#232329;
+  --ink:#e8e6e3; --muted:#9a958e; --rule:#2e2e36;
+  --accent:#7fb3d5; --weak:#ff8f8a; --sound:#6fd9a4; --warnbg:#262017;
+  color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#131316; --surface:#1c1c21; --surface-2:#232329;
+  --ink:#e8e6e3; --muted:#9a958e; --rule:#2e2e36;
+  --accent:#7fb3d5; --weak:#ff8f8a; --sound:#6fd9a4; --warnbg:#262017;
+  color-scheme:dark; }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);
+  font-size:16.5px;line-height:1.75;-webkit-text-size-adjust:100%}
+.wrap{max-width:760px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 72px}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+
+/* 顶栏 */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;
+  background:var(--bg);border-bottom:1px solid var(--rule)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);
+  z-index:21;background:var(--bg)}
+.topbar .wrap{display:flex;align-items:center;gap:12px;padding-block:10px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:700;font-size:14.5px;letter-spacing:.01em;
+  color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand span{color:var(--muted);font-weight:500}
+.topnav{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}
+.topnav a{font-family:var(--mono);font-size:12px;text-decoration:none;color:var(--muted);
+  padding:3px 7px;border-radius:4px;min-width:28px;text-align:center}
+.topnav a:hover{background:var(--surface-2);color:var(--ink)}
+.topnav a[aria-current]{background:var(--accent);color:var(--bg);font-weight:600}
+
+/* 课头 */
+.lesson-head{padding-block:40px 8px;border-bottom:1px solid var(--rule);margin-bottom:32px}
+.kicker{font-family:var(--mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 10px}
+h1{font-family:var(--display);font-size:clamp(28px,6vw,40px);line-height:1.2;margin:0 0 10px;
+  letter-spacing:-.015em;text-wrap:balance;font-weight:700}
+.sub{color:var(--muted);font-size:14.5px;margin:0 0 28px;font-family:var(--mono)}
+
+/* 大白话 */
+.plain{background:var(--surface);border:1px solid var(--rule);border-left:4px solid var(--accent);
+  border-radius:0 10px 10px 0;padding:22px 24px;margin:0 0 40px;font-size:17.5px;line-height:1.8}
+.plain .tag{display:block;font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:12px;font-weight:600}
+.plain p{margin:0 0 16px}
+.plain p:last-child{margin-bottom:0}
+.plain blockquote{margin:16px 0;padding:12px 16px;background:var(--surface-2);border-radius:8px;
+  font-family:var(--mono);font-size:14px;line-height:1.7;border:0}
+
+h2{font-family:var(--display);font-size:22px;margin:44px 0 14px;letter-spacing:-.01em;text-wrap:balance}
+h3{font-family:var(--display);font-size:17.5px;margin:34px 0 10px;letter-spacing:-.005em}
+h4{font-family:var(--display);font-size:15.5px;margin:0 0 8px}
+p{margin:0 0 16px}
+ul,ol,dl{margin:0 0 16px;padding-left:1.4em}
+li{margin:0 0 8px}
+dl{padding-left:0} dt{font-weight:600;margin-top:12px} dd{margin:0 0 8px 1.2em;color:var(--muted)}
+strong{font-weight:650}
+blockquote{margin:20px 0;padding:14px 18px;border-left:3px solid var(--rule);
+  color:var(--ink);background:var(--surface);border-radius:0 8px 8px 0}
+blockquote cite{display:block;margin-top:8px;font-style:normal;font-size:13.5px;color:var(--muted)}
+code{font-family:var(--mono);font-size:.88em;background:var(--surface-2);
+  padding:.12em .36em;border-radius:4px;word-break:break-word}
+pre{background:var(--surface);border:1px solid var(--rule);border-radius:9px;
+  padding:14px 16px;overflow-x:auto;margin:0 0 16px}
+pre code{background:none;padding:0;font-size:13px;line-height:1.65;white-space:pre}
+
+/* 表 */
+.tw{overflow-x:auto;margin:0 0 20px;border:1px solid var(--rule);border-radius:9px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:0}
+th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--display);font-weight:600;font-size:13.5px;background:var(--surface-2);
+  white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td:first-child{font-variant-numeric:tabular-nums}
+
+/* 提示块 */
+.callout{background:var(--surface);border:1px solid var(--rule);border-radius:10px;
+  padding:18px 20px;margin:0 0 20px}
+.callout p:last-child,.callout ul:last-child,.callout ol:last-child{margin-bottom:0}
+.callout.warn{background:var(--warnbg);border-color:color-mix(in srgb,var(--weak) 30%,var(--rule))}
+.callout.good{border-color:color-mix(in srgb,var(--sound) 40%,var(--rule))}
+
+/* 动图 */
+figure{margin:28px 0;border:1px solid var(--rule);border-radius:10px;overflow:hidden;
+  background:var(--surface)}
+figure svg,figure img{display:block;width:100%;height:auto;max-width:100%}
+figcaption{padding:11px 16px;font-size:13.5px;color:var(--muted);border-top:1px solid var(--rule);
+  background:var(--surface-2)}
+
+/* 跑一下 */
+.run{margin:0 0 20px}
+.run-item{border:1px solid var(--rule);border-radius:9px;margin:0 0 12px;overflow:hidden;
+  background:var(--surface)}
+.cmdbar{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-2);
+  border-bottom:1px solid var(--rule)}
+.cmdbar code{background:none;padding:0;font-size:13px;flex:1;min-width:0;overflow-x:auto;
+  white-space:pre}
+.copy{flex:none;font-family:var(--mono);font-size:11.5px;border:1px solid var(--rule);
+  background:var(--surface);color:var(--muted);border-radius:5px;padding:3px 9px;cursor:pointer}
+.copy:hover{color:var(--ink);border-color:var(--accent)}
+.copy[data-done]{color:var(--sound);border-color:var(--sound)}
+.run-item p{margin:0;padding:11px 14px;font-size:14.5px;color:var(--muted)}
+
+/* 证据分级 */
+.ev{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:999px;
+  border:1px solid currentColor;white-space:nowrap}
+.ev-s{color:var(--sound)} .ev-m{color:var(--accent)} .ev-w{color:var(--weak)}
+
+/* 带走 */
+.takeaway{background:var(--surface-2);border-radius:10px;padding:20px 22px;margin:36px 0 0;
+  border:1px solid var(--rule)}
+.takeaway .tag{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);display:block;margin-bottom:10px}
+.takeaway p:last-child{margin-bottom:0}
+
+/* 上一课 / 下一课 */
+.pager{display:flex;gap:12px;margin-top:48px;padding-top:24px;border-top:1px solid var(--rule);
+  flex-wrap:wrap}
+.pager a{flex:1 1 220px;min-width:0;text-decoration:none;border:1px solid var(--rule);
+  border-radius:10px;padding:14px 16px;background:var(--surface);color:var(--ink)}
+.pager a:hover{border-color:var(--accent)}
+.pager .dir{display:block;font-family:var(--mono);font-size:11.5px;color:var(--muted);
+  margin-bottom:4px}
+.pager .ttl{font-family:var(--display);font-size:15px;font-weight:600}
+.pager .next{text-align:right}
+
+/* 首页 */
+.hero{padding-block:48px 8px}
+.toc{display:grid;gap:10px;margin:0 0 40px;padding:0;list-style:none}
+.toc a{display:flex;gap:14px;align-items:baseline;text-decoration:none;border:1px solid var(--rule);
+  border-radius:10px;padding:14px 16px;background:var(--surface);color:var(--ink)}
+.toc a:hover{border-color:var(--accent)}
+.toc .num{font-family:var(--mono);font-size:13px;color:var(--accent);flex:none;font-weight:600}
+.toc .body{min-width:0}
+.toc .ttl{font-family:var(--display);font-weight:600;font-size:16px;display:block;line-height:1.4}
+.toc .sub2{font-size:13.5px;color:var(--muted);display:block;margin-top:2px}
+.disclaim{border:1px solid color-mix(in srgb,var(--weak) 35%,var(--rule));border-radius:10px;
+  padding:16px 18px;margin:0 0 32px;background:var(--warnbg);font-size:14.5px}
+.disclaim strong{color:var(--weak)}
+footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--rule);
+  font-size:13.5px;color:var(--muted)}
+footer a{color:var(--muted)}
+@media (max-width:520px){
+  body{font-size:16px}
+  .plain{font-size:16.5px;padding:18px 18px}
+  .brand span{display:none}
+  .topbar .wrap{padding-block:8px;gap:8px;flex-wrap:nowrap}
+  .topnav{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  .topnav::-webkit-scrollbar{display:none}
+  .topnav a{font-size:11.5px;padding:3px 6px;min-width:0;flex:none}
+}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="wrap"><a class="brand" href="index.html">弱熵的统一规律 <span>· 一门可以自己跑的课</span></a><nav class="topnav"><a href="index.html">目录</a><a href="01-milk-sad.html" title="强随机数没有「第一个钱包」">01</a><a href="02-ill-bloom.html" title="一个坏掉的随机数，活了十二年">02</a><a href="03-trust-wallet.html" title="2³² 到底有多小">03</a><a href="04-cake-wallet.html" title="不安全的那个是默认值">04</a><a href="05-php-mt-rand.html" aria-current="page" title="同一段代码，三个弱钱包范围">05</a><a href="06-brainwallet.html" title="人选的口令">06</a><a href="07-coldcard.html" title="这次失败，恰恰来自那个冲突的缺席">07</a><a href="08-xor.html" title="XOR 不生产随机性">08</a><a href="09-pbkdf2.html" title="PBKDF2 救不了你">09</a><a href="10-five-guards.html" title="五道保险，五道都没响">10</a><a href="11-attacker-tempo.html" title="攻击者的节奏">11</a><a href="12-prediction.html" title="一个可证伪的赌注">12</a></nav></div></header>
+<main class="wrap">
+<div class="lesson-head">
+<p class="kicker">第 05 课 / 共 12 课</p>
+<h1>同一段代码，三个弱钱包范围</h1>
+<p class="sub">PHPCoinAddress · 2013–2018</p>
+</div>
+<div class="plain"><span class="tag">大白话</span><p>前面四课的受害者都是个人用户。这一课的受害者是<strong>基础设施</strong>。</p>
+<p>2013 年有一个 PHP 库，给网店在服务器上批量生成收款地址用。<br>每个来买东西的顾客拿到一个新地址，而那个地址的私钥是用 <code>mt_rand()</code> 生成的。</p>
+<p>发布几个月后就有人在论坛上公开点名：「这个脚本生成的私钥不安全，第 240 行用了 mt_rand」。</p>
+<p><strong>这是全部十一个案例里最快的一次发现。然后用量持续了好几年。</strong></p>
+<p>因为用它的人根本不读那个论坛。</p>
+<p>这一课还有一个很少被讲的复杂度：PHP 在二十年里至少改了三次 <code>mt_rand()</code> 的底层行为。<br>所以<strong>同一段代码，在不同版本的 PHP 上生成完全不同的钥匙</strong> —— 不是一个弱空间，是一族。</p></div>
+<h2>往下一层</h2>
+<h3>差一个字母</h3>
+<p>PHP 的 Mersenne Twister 和标准的差在一行上。C 源码里是两个宏：</p>
+<pre><code>// 正确（MT_RAND_MT19937）
+#define twist(m,u,v)     (m ^ (mixBits(u,v)&gt;&gt;1) ^ (-(int32_t)(loBit(v)) &amp; 0x9908b0df))
+                                                                   ^^^^
+// PHP 自己的（MT_RAND_PHP）
+#define twist_php(m,u,v) (m ^ (mixBits(u,v)&gt;&gt;1) ^ (-(int32_t)(loBit(u)) &amp; 0x9908b0df))
+                                                                   ^^^^</code></pre>
+<p><code>u</code> 和 <code>v</code>。十三年里，全世界 PHP 生成的随机数都走的是下面那条。</p>
+<p>课程代码两个模式都实现了，跑一下会看到：
+同一个种子，<strong>一整轮 624 个输出里约一半不同</strong>。
+一半不同就已经是两个完全不相交的弱钱包空间，研究者要分别枚举。</p>
+
+<div class="callout warn">
+<p><strong>证据说明：</strong>这段实现是按 PHP 的 C 宏写的，<strong>没有和真实 PHP 引擎交叉验证过</strong>
+（本机没装 PHP）。机理（差一个 u/v）是有一手出处的；
+「本实现与真实引擎逐值一致」这件事没有。你装了 PHP 可以一行核对：</p>
+<pre><code>php -r 'mt_srand(42, MT_RAND_PHP); echo mt_rand(),",",mt_rand();'</code></pre>
+</div>
+<h2>自己跑一下</h2>
+<div class="run">
+<div class="run-item"><div class="cmdbar"><code>python3 lessons/05_php_mt_rand/php_mt_rand.py</code><button class="copy" type="button">复制</button></div><p>两个模式并排跑，数出一轮里有多少个输出不同。</p></div>
+</div>
+<h2>数字与出处</h2>
+<div class="tw"><table><thead><tr><th>数字</th><th>是什么</th><th>出处</th><th>证据</th></tr></thead><tbody>
+<tr><td><strong>2013-12-13</strong></td><td>被公开点名的日期（发布后几个月）</td><td>bitcointalk 用户 Abdussamad</td><td><span class="ev ev-s">强</span></td></tr>
+<tr><td><strong>7,713.5 BTC</strong></td><td>MT_RAND_PHP 范围的历史流量</td><td>Milk Sad #17/#18</td><td><span class="ev ev-s">强</span></td></tr>
+<tr><td><strong>2^41 / 2^40</strong></td><td>研究者实际搜索的空间量级</td><td>Milk Sad</td><td><span class="ev ev-s">强</span></td></tr>
+</tbody></table></div>
+<div class="takeaway"><span class="tag">带走这个</span><p>「已披露」和「已修复」是两件事。<br>「已修复」和「用户的钱安全了」是<strong>第三件</strong>事。</p>
+<p>这个案例把三者之间的距离拉到了最大：发现最快，影响最久。</p></div>
+<nav class="pager">
+<a href="04-cake-wallet.html"><span class="dir">← 上一课</span><span class="ttl">不安全的那个是默认值</span></a>
+<a class="next" href="06-brainwallet.html"><span class="dir">下一课 →</span><span class="ttl">人选的口令</span></a>
+</nav>
+<div class="disclaim"><strong>免责：</strong>本课复现的是<strong>已被公开披露并已修复</strong>的历史缺陷，用于教学。固定 demo 种子，不联网，不碰任何真实密钥。如果你怀疑自己的钱包受影响，不要用这里的代码去验证 —— 去看厂商官方公告。</div><footer><p>弱熵的统一规律 · 代码与动图：<a href="https://github.com/aaron-recompile/weak-entropy-lessons">GitHub</a>。每一课的代码都能用 <code>python3</code> 一行跑出结果。</p><p>所有数字带出处和证据分级。标「弱」的不要单独使用。</p></footer>
+</main>
+<script>
+document.querySelectorAll('.copy').forEach(function(b){
+  b.addEventListener('click', function(){
+    var t = b.closest('.cmdbar').querySelector('code').textContent;
+    function done(){ b.dataset.done='1'; b.textContent='已复制';
+      setTimeout(function(){ delete b.dataset.done; b.textContent='复制'; }, 1600); }
+    try {
+      navigator.clipboard.writeText(t).then(done, select);
+    } catch(e){ select(); }
+    function select(){
+      var r=document.createRange(); r.selectNodeContents(b.closest('.cmdbar').querySelector('code'));
+      var s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent='已选中，按 ⌘C';
+      setTimeout(function(){ b.textContent='复制'; }, 2400);
+    }
+  });
+});
+</script>
+</body>
+</html>
