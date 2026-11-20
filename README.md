@@ -6,7 +6,7 @@
 一门可以自己跑的课。每一课配一段**真的能跑出结果**的最小代码 —— 不是伪代码，
 是跑完就看见弱钥匙被算出来的那种。
 
-**📖 连载 HTML 版：https://aaron-recompile.github.io/weak-entropy-lessons/**
+**📖 连载 HTML 版：https://bitcoincoding.dev/weak-entropy-lessons/**
 
 ---
 
