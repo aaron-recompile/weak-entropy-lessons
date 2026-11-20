@@ -23,11 +23,82 @@ INTRO_PLAIN = """\
 直到某一天余额是 0。
 
 这门课讲的就是门 1。十三年，十一个独立案例，十一个不同的团队。
-它们有一个共同点，而那个共同点比「随机数很难」具体得多，也有用得多。"""
+它们有一个共同点，而那个共同点比「随机数很难」具体得多，也有用得多。
+
+**从第 1 课开始**：它只讲一件事 —— 攻击者不是在猜你的钥匙，
+而是在**重新运行当年生成你钥匙的那段代码**。
+这个区分决定了后面每一课能不能被正确理解。"""
 
 LESSONS = [
     dict(
-        n=1, slug="milk-sad", title="强随机数没有「第一个钱包」",
+        n=1, slug="recompute", title="不是碰撞，是重算",
+        sub="后面十三课的第一性原理",
+        plain="""\
+几乎所有人第一次听说「弱随机数」，脑子里想的是**碰撞** ——
+别人随机生成一把钥匙，恰好对上了你的地址。
+
+碰撞在比特币上不会发生。地址空间大到即使历史上产生过十亿个地址，
+任意两个相撞的概率也只有 10⁻³¹ 量级。这条路是关着的。
+
+真正发生的，全部是另一件事：**重算**。
+
+> **攻击者不是在猜你的钥匙。他是在重新运行当年生成你钥匙的那段代码。**
+
+不是「对上了」，是**同一把** —— 字节级完全相同。
+当年你的钱包跑了一次，今天攻击者跑了第二次。仅此而已。
+
+这个区分不是术语洁癖。它决定了后面每一课能不能被正确理解，
+也决定了哪些防御根本不起作用。""",
+        body="""\
+<h3>攻击是<strong>正向</strong>跑的</h3>
+<p>攻击者走的每一步，都和钱包当年走的完全一样，方向也一样：</p>
+<pre><code>① 种子  →  ② 熵  →  ③ 私钥  →  ④ 公钥  →  ⑤ 地址</code></pre>
+<p>注意箭头的方向：从头到尾都是往下走的。攻击者<strong>从来不需要</strong>：</p>
+<ul>
+<li>✗ 看你的公钥，或者从地址逆推回公钥</li>
+<li>✗ 从公钥逆推回私钥</li>
+<li>✗ 攻破 secp256k1、SHA-256 或 RIPEMD-160</li>
+<li>✗ 做任何形式的密码分析</li>
+</ul>
+<p>他只在<strong>最后一步</strong>用你的地址做一次查表比对：
+「我算出来的这几亿个地址里，有没有一个在链上有钱？」</p>
+
+<h3>强随机数为什么免疫</h3>
+<p>区别<strong>不</strong>在于「强随机数更难猜」。区别在于：</p>
+<div class="callout">
+<p><strong>弱随机数有一个可以被重新喂进去的输入（种子）。强随机数没有。</strong></p>
+<p><code>os.urandom</code> 没有种子参数 —— 你没法要求它「再给我一次上次那个」。
+而正因为没有这个输入，也就没有「第二次」可言。</p>
+</div>
+
+<h3>三个推论，每个都反直觉</h3>
+<ol>
+<li><strong>「比特币的密码学没有被攻破」和「你的钱没了」可以同时为真。</strong>
+历史上每一次都是同时为真 —— 椭圆曲线一次都没坏过。</li>
+<li><strong>量子计算和这件事无关。</strong>量子打的是「公钥暴露之后，能不能逆推回私钥」,
+那是一个<strong>逆向</strong>问题。重算根本不需要逆向，所以抗量子签名方案
+一个字节都修不了弱熵。反过来也成立：修好弱熵，量子那条线一点没动。
+<strong>两条线互不替代。</strong></li>
+<li><strong>换算法、换曲线、加长地址、加长助记词，全都不修这个。</strong>
+因为缺陷不在密码学里，在<strong>生成器</strong>里。第 10 课会让你看到，
+连 2048 轮 PBKDF2 也不修。</li>
+</ol>""",
+        run=[("python3 lessons/01_recompute/recompute.py",
+              "算出碰撞的概率，然后让同一个弱生成器跑两次，看到字节级相同的助记词和地址。")],
+        numbers=[
+            ("2¹⁶⁰", "地址空间 —— 碰撞那条路的大小", "HASH160", "很强"),
+            ("约 10⁻³¹", "十亿个地址里任意两个相撞的概率", "生日问题，本课代码现算", "很强（可自证）"),
+            ("0", "历史上因碰撞丢币的案例数", "案例库 13 年 11 个案例，全部是重算", "强"),
+        ],
+        takeaway="""\
+既然攻击就是「重新跑一遍当年那段代码」，那么第 1 道门只有一个问题：
+
+**这批词，是哪段代码生成的？**
+
+后面十三课，全部是这一句话的展开。""",
+    ),
+    dict(
+        n=2, slug="milk-sad", title="强随机数没有「第一个钱包」",
         sub="bx seed / Milk Sad · CVE-2023-39910",
         anim="mt19937.svg",
         anim_caption="MT19937 的状态有 19,937 位，但播种只喂进去 32 位 —— 所以可达的流只有 2³² 条。",
@@ -66,7 +137,7 @@ Milk Sad 这个研究项目的名字就是从这里来的。
 <p>Python 的 <code>random.seed(n)</code> 和 C++ 的 <code>std::mt19937(n)</code>
 <strong>不是同一条流</strong> —— 前者走 <code>init_by_array</code>，后者走 <code>init_genrand</code>。
 复现别人的漏洞时这是最常见的失败原因。所以本课程自己实现 MT19937，不从库里 import。</p>""",
-        run=[("python3 lessons/01_milk_sad/milk_sad.py",
+        run=[("python3 lessons/02_milk_sad/milk_sad.py",
               "逐字复现那二十四个词，然后在几秒内从一个「受害者」的助记词反推出种子。")],
         numbers=[
             ("6 年 4 个月", "潜伏期", "Milk Sad #1–#22", "强"),
@@ -81,7 +152,7 @@ Milk Sad 这个研究项目的名字就是从这里来的。
 是「三把钥匙在三家厂商的设备上**各自生成**，才能挺过其中一家把随机数写错了」。""",
     ),
     dict(
-        n=2, slug="ill-bloom", title="一个坏掉的随机数，活了十二年",
+        n=3, slug="ill-bloom", title="一个坏掉的随机数，活了十二年",
         sub="CryptoJS / Ill Bloom · CVE-2026-71851",
         plain="""\
 上一课那个「第一个钱包」不是孤例。
@@ -107,19 +178,36 @@ Milk Sad 这个研究项目的名字就是从这里来的。
 256 位请求（8 个字）：32 位 + 8×2 位 = 48 位</code></pre>
 <p>Coinspect 公布的实测口径是 2³⁹ 和 2⁴⁷ —— 和上面这个纸上推演各差约 1 位。量级对得上。</p>
 
+<h3>中文助记词那件事 —— 按真实尺寸讲</h3>
+<p>有一篇专门的「中文助记词盗转分析」，很容易被放大成「中文钱包有独立的缺陷」。
+把数字摆出来就清楚了：</p>
+<div class="tw"><table><tbody>
+<tr><td>中文词表子集</td><td>142 个种子（比特币 / 以太坊 / 波场）</td></tr>
+<tr><td>2026-07-20 至 07-21 被扫</td><td>81 个</td></tr>
+<tr><td>合计损失</td><td><strong>约 $38,563</strong></td></tr>
+<tr><td>对照：Ill Bloom 两次主事件</td><td>约 $5.69M</td></tr>
+<tr><td>占比</td><td><strong>0.68%</strong></td></tr>
+</tbody></table></div>
+<p>→ <strong>它证明的不是「中文钱包更危险」，而是「攻击者会枚举非英语词表」。</strong>
+这是一条关于<strong>攻击者覆盖面</strong>的证据，不是一条关于中文生态的证据。</p>
+<p>真正有信息量的细节在别处：那批以太坊盗转<strong>汇集到两个之前就出现过的收款地址</strong>上
+—— 同一套收款基础设施，跨链协同执行。这是把它和主事件绑在同一场战役里的硬证据。</p>
+
 <h3>为什么这一课的代码值得跑</h3>
 <p>课程里带了<strong>原版的那段 JavaScript</strong>（用 node 跑）和一份 Python 移植，
 两边输出逐字节一致。你不用相信任何人的转述，
 可以自己看到 <code>Math.random()</code> 返回 0 的时候出来的就是 illness blossom。</p>""",
-        run=[("python3 lessons/02_ill_bloom/ill_bloom.py",
+        run=[("python3 lessons/03_ill_bloom/ill_bloom.py",
               "复现第一个助记词，并和原版 JS 交叉验证。"),
-             ("node lessons/02_ill_bloom/cryptojs_random.js zero 16",
+             ("node lessons/03_ill_bloom/cryptojs_random.js zero 16",
               "直接跑那段原封不动抄下来的 crypto-js 代码。")],
         numbers=[
             ("12 年", "潜伏期（2014 → 2026-05）", "Coinspect / Milk Sad #20–#22", "强"),
             ("2³⁹ / 2⁴⁷", "128 位 / 256 位请求的有效空间", "Coinspect", "强"),
             ("8,120.9 BTC", "历史流量（仅 BTC / 128 位 / 英文词表，下界）", "Reitter 一手验证", "强"),
-            ("约 $569 万", "实际被盗（截至 2026-07-13，自称下界）", "Coinspect，经二手转述", "弱"),
+            ("约 $569 万", "两次主事件的实际被盗（自称下界）", "Coinspect", "强"),
+            ("约 $38,563", "中文词表子集被扫走的总额（占主事件 0.68%）", "illbloom.org 中文盗转分析，已读原文", "强"),
+            ("5 个", "已确认受影响的 App（其中 2 个已停运、无修复）", "illbloom.org 归因文，已读原文", "很强"),
         ],
         takeaway="""\
 **硬件钱包用户不受 Ill Bloom 影响**（Coinspect 明确说的）。
@@ -128,7 +216,7 @@ Milk Sad 这个研究项目的名字就是从这里来的。
 在你评估任何一个依赖链的时候，这是一个比「他们懂不懂密码学」更该问的问题。""",
     ),
     dict(
-        n=3, slug="trust-wallet", title="2³² 到底有多小",
+        n=4, slug="trust-wallet", title="2³² 到底有多小",
         sub="Trust Wallet 浏览器扩展 · CVE-2023-31290",
         anim="scale.svg",
         anim_caption="横轴是 log₂。这张图画不出真实比例 —— 它让你看得见，代价是看不见真正的差距。",
@@ -143,7 +231,7 @@ Ledger Donjon 的研究员把整个空间**真的算完了**，然后公布了�
 这个 0.2 秒不是因为他们算得快，是因为表已经在那了。
 
 而表一旦存在，**它不会过期**。2018 年算好的东西，2026 年照样能用。
-这就是第 11 课那个「武器库」的意思。
+这就是第 13 课那个「武器库」的意思。
 
 这一课还有另一半，而且是整门课里唯一的好消息：
 这是十一个案例里**唯一一个在任何人被偷之前就被关掉的**。潜伏期三天。
@@ -171,7 +259,7 @@ Trust Wallet 扩展发布。这大概意味着这个漏洞还存在于<strong>�
 <p>两年后，Milk Sad 的研究更新 #19 找到了那个东西：
 一个 2018 年的、<strong>至今没人知道是哪个</strong>的软件，13.7 万枚 BTC 的量级。
 两个独立团队，从两端收敛到同一个结论。</p>""",
-        run=[("python3 lessons/03_trust_wallet_wasm/trust_wallet.py",
+        run=[("python3 lessons/04_trust_wallet_wasm/trust_wallet.py",
               "在本机建一张迷你彩虹表，然后用微秒级的查表把种子还原出来，并把表的大小外推到全表。")],
         numbers=[
             ("3 天", "潜伏期 —— 全课最短，也是唯一一次主动审计发现", "Ledger Donjon 复盘 2023-04-25", "很强"),
@@ -188,7 +276,7 @@ Trust Wallet 扩展发布。这大概意味着这个漏洞还存在于<strong>�
 **这个行业的发现机制，主要是盗案。**""",
     ),
     dict(
-        n=4, slug="cake-wallet", title="不安全的那个是默认值",
+        n=5, slug="cake-wallet", title="不安全的那个是默认值",
         sub="Cake Wallet · 2020–2021",
         plain="""\
 这一课的 bug 只有一个默认参数那么大。
@@ -218,13 +306,13 @@ Trust Wallet 扩展发布。这大概意味着这个漏洞还存在于<strong>�
 <p><strong>往悲观的方向：</strong>清扫最终一定会来，而且来的时候是<strong>完整且同时</strong>的。
 三年没动的人，在某一天一次性全部失去。</p>
 </div>
-<p>为什么会有这个窗口？不是运气。机理在第 11 课。</p>
+<p>为什么会有这个窗口？不是运气。机理在第 13 课。</p>
 
 <h3>为什么这一课能整个跑完</h3>
 <p>有效熵是 20 位。<strong>2²⁰ = 一百零四万</strong>个种子 ——
 这是本课程里唯一一个能在一台笔记本上<strong>从头走到尾</strong>的真实案例空间。
 课程代码跑完整个空间大约两秒。</p>""",
-        run=[("python3 lessons/04_cake_wallet/cake_wallet.py",
+        run=[("python3 lessons/05_cake_wallet/cake_wallet.py",
               "先看「有 bug 的」和「修好的」两条路生成的助记词毫无区别，然后把整个 2²⁰ 空间走完。")],
         numbers=[
             ("20 位", "有效熵", "Milk Sad #6/#9/#10", "强"),
@@ -240,7 +328,7 @@ Trust Wallet 扩展发布。这大概意味着这个漏洞还存在于<strong>�
 种子的强度永远绑定在它**诞生那一刻**依赖的随机性上。""",
     ),
     dict(
-        n=5, slug="php-mt-rand", title="同一段代码，三个弱钱包范围",
+        n=6, slug="php-mt-rand", title="同一段代码，三个弱钱包范围",
         sub="PHPCoinAddress · 2013–2018",
         plain="""\
 前面四课的受害者都是个人用户。这一课的受害者是**基础设施**。
@@ -276,7 +364,7 @@ Trust Wallet 扩展发布。这大概意味着这个漏洞还存在于<strong>�
 「本实现与真实引擎逐值一致」这件事没有。你装了 PHP 可以一行核对：</p>
 <pre><code>php -r 'mt_srand(42, MT_RAND_PHP); echo mt_rand(),",",mt_rand();'</code></pre>
 </div>""",
-        run=[("python3 lessons/05_php_mt_rand/php_mt_rand.py",
+        run=[("python3 lessons/06_php_mt_rand/php_mt_rand.py",
               "两个模式并排跑，数出一轮里有多少个输出不同。")],
         numbers=[
             ("2013-12-13", "被公开点名的日期（发布后几个月）", "bitcointalk 用户 Abdussamad", "强"),
@@ -290,7 +378,7 @@ Trust Wallet 扩展发布。这大概意味着这个漏洞还存在于<strong>�
 这个案例把三者之间的距离拉到了最大：发现最快，影响最久。""",
     ),
     dict(
-        n=6, slug="brainwallet", title="人选的口令",
+        n=7, slug="brainwallet", title="人选的口令",
         sub="脑钱包 · 2009 至今",
         plain="""\
 前面五课都是程序写错了。这一课不是 bug，是设计。
@@ -326,8 +414,8 @@ Trust Wallet 扩展发布。这大概意味着这个漏洞还存在于<strong>�
 <p>工具公开十年了。<strong>知识的传播比你想象的慢得多。</strong></p>
 <p>这是整门课最该让人谦虚的一句：这些漏洞不是因为难才存在，
 是因为<strong>没人告诉用过它的那个人</strong>。</p>""",
-        run=[("python3 lessons/06_brainwallet/brainwallet.py",
-              "从一个地址反推出口令。顺便看到椭圆曲线那一步有多贵 —— 第 11 课要用这个。")],
+        run=[("python3 lessons/07_brainwallet/brainwallet.py",
+              "从一个地址反推出口令。顺便看到椭圆曲线那一步有多贵 —— 第 13 课要用这个。")],
         numbers=[
             ("3,606.59 BTC", "SHA256 单轮范围的历史流量", "Milk Sad #16", "强"),
             ("≈0", "「可被计算」到「真的被计算」的间隔", "Castellucci DC23, 2015", "强"),
@@ -341,7 +429,7 @@ Trust Wallet 扩展发布。这大概意味着这个漏洞还存在于<strong>�
 **重要的从来不是你多小心，是那串字节是从哪来的。**""",
     ),
     dict(
-        n=7, slug="coldcard", title="这次失败，恰恰来自那个冲突的缺席",
+        n=8, slug="coldcard", title="这次失败，恰恰来自那个冲突的缺席",
         sub="Coldcard · 2021-03 → 2026-07 · 本课最难也最值钱",
         anim="linker.svg",
         anim_caption="链接器要找一个叫 rng_get 的全局符号 —— 而它只找到一个候选。",
@@ -401,6 +489,31 @@ duplicate symbol 失败。<strong>这次失败，恰恰来自那个冲突的缺�
 <p>枚举结果：<strong>Mk3 上 4,456,448 个起始状态 = 2²².⁰⁹</strong>。
 单张 RTX 4090 跑 <strong>3 秒</strong>。</p>
 
+<h3>成本公式还缺一项：配置维度</h3>
+<p>上面那个 2²² 算的是<strong>生成器的状态空间</strong>。真实的扫荡成本还要再乘一项：</p>
+<pre><code>成本 = |生成器状态空间| × |配置数|</code></pre>
+<blockquote>不同的助记词语言、熵长度和派生路径，会在不同网络上导出不同的钱包和地址集合。
+<strong>这些配置不可互换：每一个都可能需要一次独立的搜索，
+同时扩大地址空间和所需的计算量。</strong><cite>—— Coinspect</cite></blockquote>
+<p>配置数自己数一遍：10 种 BIP39 词表语言 × 5 种熵长度 × 约 15 个常见派生路径模板
+≈ <strong>750 ≈ 2⁹·⁶</strong>。代进去：</p>
+<div class="tw"><table><thead><tr><th>机型</th><th>裸状态空间</th><th>× 配置数</th><th>单张 4090</th></tr></thead><tbody>
+<tr><td>Mk3</td><td>2²²</td><td><strong>≈ 2³²</strong></td><td>定点 3 秒 / 扫荡 35 分钟</td></tr>
+<tr><td>Mk4/Mk5/Q</td><td>2⁵²</td><td><strong>≈ 2⁶²</strong></td><td>定点约 95 年 / 扫荡 7 万年</td></tr>
+</tbody></table></div>
+<div class="callout warn">
+<p><strong>但这一项要用对，它有两个方向：</strong></p>
+<ul>
+<li><strong>扫荡者</strong>（不知道受害者用的是哪个配置）付的是上面这个乘积。</li>
+<li><strong>定点攻击者</strong>（已经知道型号、固件、语言、派生路径）<strong>不付这一项</strong> ——
+他付的就是裸的状态空间。那个「Mk3 三秒」就是这种情形。</li>
+</ul>
+<p>所以<strong>配置维度保护不了你</strong>。它只解释了为什么研究者的全量枚举那么慢、
+为什么攻击者是「随时间逐步」抽干而不是一次扫完。</p>
+<p>（那段引文和「配置不可互换」这个原则是 Coinspect 一手的，针对的是钱包应用的调查；
+代到 Coldcard 的数字上是本课做的演算，不是 Coinspect 对 Coldcard 的结论。）</p>
+</div>
+
 <h3>最该读的一条对比</h3>
 <p>Mk4/Mk5/Q 约 2⁵²，约 95 年。<strong>3 秒 vs 95 年不是「程度」的差别，是「种类」的差别。</strong>
 这 29.5 位的差距<strong>完全来自安全元件那 32 位的 reseed</strong> ——
@@ -419,7 +532,7 @@ Wizardsardine 的原话：<strong>它是这整条链里唯一一个真正起了�
 </div>""",
         run=[("cd lessons/07_coldcard_link && make all",
               "broken → duplicate → archive → fixed → verify，五个构建依次跑完。"),
-             ("python3 lessons/07_coldcard_link/enumerate_mk3.py",
+             ("python3 lessons/08_coldcard_link/enumerate_mk3.py",
               "把 2²² 那个空间的大小、碰撞概率、爆破成本全部算一遍。")],
         numbers=[
             ("1,962 天", "第一个脆弱发布版（4.0.0，2021-03-17）→ 修复（2026-07-31）", "Coinkite / Wizardsardine", "很强"),
@@ -438,7 +551,7 @@ Q 在 1.5.0Q 之前；Edge 轨道分别是 6.6.0X / 6.6.0QX。
 本课全部材料来自外部公开出处（Coinkite 公告、Wizardsardine 两篇、Coinspect/Unlukey）。""",
     ),
     dict(
-        n=8, slug="xor", title="XOR 不生产随机性",
+        n=9, slug="xor", title="XOR 不生产随机性",
         sub="H(A⊕B) ≤ H(A) + H(B)",
         plain="""\
 上一课那句「把两个软件生成器混在一起等于什么都没混」，这一课把它证明出来。
@@ -474,10 +587,10 @@ Q 在 1.5.0Q 之前；Edge 轨道分别是 6.6.0X / 6.6.0QX。
 <li>✅ 系统 CSPRNG，直接用，不混 —— 不需要论证</li>
 <li>✅ 硬件 TRNG XOR 系统 CSPRNG —— 两个都强，怎么混都对</li>
 <li>⚠️ 混了时间、鼠标移动、进程 ID、设备序列号 —— 全部可观测，和 = 0</li>
-<li>❌ 混了两个 PRNG —— 这就是第 7 课</li>
+<li>❌ 混了两个 PRNG —— 这就是第 8 课</li>
 </ul>
 </div>""",
-        run=[("python3 lessons/08_xor/xor_entropy.py",
+        run=[("python3 lessons/09_xor/xor_entropy.py",
               "穷举三种情形，数出 XOR 之后的实际空间大小。还会看到一个「禁止的种子值静默吃掉熵」的小陷阱。")],
         numbers=[("H(A⊕B) ≤ H(A)+H(B)", "信息论上界", "本课代码逐一穷举验证", "很强（可自证）")],
         takeaway="""\
@@ -485,7 +598,7 @@ Q 在 1.5.0Q 之前；Edge 轨道分别是 6.6.0X / 6.6.0QX。
 「就算熵弱一点，可是还有 KDF 拉伸啊。」""",
     ),
     dict(
-        n=9, slug="pbkdf2", title="PBKDF2 救不了你",
+        n=10, slug="pbkdf2", title="PBKDF2 救不了你",
         sub="常数补不回指数",
         plain="""\
 有一个很常见的直觉：
@@ -529,7 +642,7 @@ Q 在 1.5.0Q 之前；Edge 轨道分别是 6.6.0X / 6.6.0QX。
 <li><strong>BIP-85 恰好等于父种子的价值。</strong>它是确定性派生的 ——
 父种子弱，所有子钱包一起弱。这条容易被漏掉，因为 BIP-85 给人一种「每个子钱包独立」的错觉。</li>
 </ol>""",
-        run=[("python3 lessons/09_pbkdf2/pbkdf2_wont_save_you.py",
+        run=[("python3 lessons/10_pbkdf2/pbkdf2_wont_save_you.py",
               "在本机量出那个常数，算出「要补回 Mk3 丢掉的熵需要多少轮迭代」，并拆解完整攻击链的每一环。")],
         numbers=[
             ("2048 轮 ≈ 10 位", "BIP39 的 KDF 买到的熵（上界口径）", "本课在本机实测", "很强（可自证）"),
@@ -543,7 +656,7 @@ Q 在 1.5.0Q 之前；Edge 轨道分别是 6.6.0X / 6.6.0QX。
 （passphrase、骰子）。除此之外的一切都是在搬运已经有的那些位。""",
     ),
     dict(
-        n=10, slug="five-guards", title="五道保险，五道都没响",
+        n=11, slug="five-guards", title="五道保险，五道都没响",
         sub="因为五道都在检查输出",
         anim="guards.svg",
         anim_caption="五道检查全部作用在「字节长什么样」上，而坏掉的是「字节从哪来」。",
@@ -603,7 +716,7 @@ Coldcard 不是没防这件事。他们装了**五道保险**，包括一个真�
 一个软件 PRNG 无论输出多漂亮，都没法假装自己读过那个寄存器。</p>
 <p>⚠️ 截至 Wizardsardine 2026-08-11 那篇发表时，<strong>这个自检还没发版</strong>。这是可核的一条。</p>
 </div>""",
-        run=[("python3 lessons/10_five_guards/five_guards.py",
+        run=[("python3 lessons/11_five_guards/five_guards.py",
               "五道保险逐一跑，看它们全部「通过」；最后那个路径检查一次抓住。")],
         numbers=[
             ("5 / 5", "装的保险数 / 失效的保险数", "Wizardsardine 第 7–13 节", "很强"),
@@ -613,11 +726,100 @@ Coldcard 不是没防这件事。他们装了**五道保险**，包括一个真�
         takeaway="""\
 **如果你要设计一个自己的熵验证实验，设计成验证路径，而不是验证分布。**
 
-这是整份研究里最有用的一条方法。第 7 课那个十五行的 `verify_symbols.sh` 就是一个例子 ——
+这是整份研究里最有用的一条方法。第 8 课那个十五行的 `verify_symbols.sh` 就是一个例子 ——
 它不看任何一个字节，只问「这个符号绑在谁身上」。""",
     ),
     dict(
-        n=11, slug="attacker-tempo", title="攻击者的节奏",
+        n=12, slug="attribution", title="从链上反推到是哪个软件",
+        sub="Coinspect 的侦探活 · 枚举完只做了一半",
+        plain="""\
+枚举出一份弱钥匙名单，只做完了一半。
+
+另一半是：**搞清楚这是哪个软件做的。**
+
+因为如果不知道是哪个软件，就**没有任何人可以被通知**。
+没有东西可以打补丁，没人能收到「你用过那个工具，赶紧换钱包」这句话，
+而那个软件可能还在生成新的弱钱包。
+
+第 6 课那个「未知软件」案例就是这个形态的极端：十三万枚 BTC 的量级，
+至今没人知道是哪个程序做的。
+
+而一条公开的链上地址，**不会告诉你它是哪个应用生成的**。
+如果那个应用是闭源的、而且已经停运，生成它的那个版本可能已经不存在于世上了。
+
+这一课讲 Coinspect 怎么把这件事做成了。三个手法都很漂亮，
+而且其中一个可以在你自己机器上算一遍。""",
+        body="""\
+<h3>五条路，没有一条是通用方法</h3>
+<div class="tw"><table><thead><tr><th>应用</th><th>状态</th><th>修复</th><th>怎么认出来的</th></tr></thead><tbody>
+<tr><td>RRWallet（人人比特）</td><td>已停运</td><td><strong>无修复</strong></td><td>公开源码 + Arkham 实体标注</td></tr>
+<tr><td>Bexo Wallet</td><td>在运营</td><td>20.1.0 已修</td><td>厂商被盗后主动找上门（反向入口）</td></tr>
+<tr><td>NanChat</td><td>在运营</td><td>1.3.0 已修（带迁移）</td><td>npm 依赖链 → 追进生成流程</td></tr>
+<tr><td>Bitcoin Libre</td><td>在运营</td><td>第 4 版已修（2024-07）</td><td>链上活动 → 开发者 Twitter → 本人确认</td></tr>
+<tr><td>Milo</td><td>已停运</td><td><strong>无修复</strong></td><td>链上代币聚集 → 历史 APK 逆向重建</td></tr>
+</tbody></table></div>
+<p>Coinspect 自己的话：<strong>「没有单一路径。」</strong>
+入口的多样性本身就是结论 —— 这一步<strong>没法自动化，它是人力密集的</strong>。
+第 13 课那个「防守方人力极少」的混淆因素，具体就长这样。</p>
+<p>另外注意两个「已停运、无修复」：<strong>软件可以停运，弱种子不会停运。</strong></p>
+
+<h3>最漂亮的那条线：代币聚集</h3>
+<p>在 256 位搜索的某个子集里，<strong>96% 的钱包都收到过同一个代币</strong>
+（Polygon 上的 Milo）。顺着这个代币找到应用，拿到历史 APK，重建生成流程，确认。</p>
+<p>为什么 96% 是线索而不是巧合？课程代码把二项分布算给你看 ——
+即使把基线持有率放大到 10%，纯属巧合的概率仍然在 10⁻⁴⁴⁵ 量级。</p>
+<div class="callout">
+<p><strong>归因的全部机理就在这里：弱钥匙是同源的，所以它们的链上行为也同源。</strong>
+生成器把一群互不相识的人绑在了一起，而那个绑定在链上是看得见的。</p>
+<p>顺带一个让人不舒服的推论：<strong>这个方法攻击者同样能用。</strong>
+它不是防守方的独门武器。</p>
+</div>
+
+<h3>一句该背下来的方法论</h3>
+<blockquote>知道一个项目依赖了含缺陷实现的库，<strong>只是起点</strong>。
+<cite>—— Coinspect</cite></blockquote>
+<p>同一个库可能被用在很多地方，而多数地方和密钥无关。必须<strong>追进去</strong>，
+确认它真的在钱包生成路径上。</p>
+<p>课程里有两个文件，依赖<strong>完全相同</strong>的缺陷库：一个用它生成钱包，
+一个只用它做界面上的占位 id。<strong>嗅探器对两个的命中数一模一样</strong> ——
+能分开它们的只有调用链，而调用链要人读。</p>
+<p>→ <strong>自动化能给你候选名单，不能给你结论。</strong></p>
+
+<h3>每认出一个钱包，搜索空间就变大一次</h3>
+<blockquote>一旦确认了一个钱包，我们还必须确定它支持哪些配置。
+不同的助记词语言、熵长度和派生路径，会在不同网络上导出不同的钱包和地址集合。
+<strong>这些配置不可互换：每一个都可能需要一次独立的搜索，
+同时扩大地址空间和所需的计算量。</strong>
+<cite>—— Coinspect</cite></blockquote>
+<p>所以这项调查是<strong>迭代</strong>的：链上分析 → 找到一个钱包 →
+这个钱包带出新的生成参数 → 新参数导出新地址 → 新地址可能又指向新的应用 → 回到第一步。</p>
+<p>这条对第 8 课那个成本公式有直接影响，去看那一课的「配置维度」。</p>
+
+<div class="callout warn">
+<h4>这一课的红线</h4>
+<p>本课程只讲<strong>已经被公开披露、并且已经被修复或已停止维护</strong>的案例，
+只引用厂商或研究机构<strong>自己公开过</strong>的归因结论。</p>
+<p>不会出现在这个公开仓库里的：任何「可疑钱包清单」、任何未经确认的候选应用、
+任何尚在调查中的生态的目标名单。</p>
+<p>理由很简单：那种清单<strong>既是一份未经证实的指控，也是一张给攻击者的地图</strong>。
+归因的价值在于通知受影响的用户，不在于点名。</p>
+</div>""",
+        run=[("python3 lessons/12_attribution/attribution.py",
+              "算出「96% 持有同一代币」这个信号有多强，并看到嗅探器分不开那两个依赖相同的文件。")],
+        numbers=[
+            ("5", "Coinspect 已确认的受影响应用数（自称不完整）", "illbloom.org 归因文，本课已读原文", "很强"),
+            ("96%", "Milo 那个子集里持有同一代币的比例", "Coinspect", "很强"),
+            ("2", "五个里「已停运、无修复」的个数", "Coinspect", "很强"),
+            ("约 $38,563", "中文词表子集被扫走的总额（占 Ill Bloom 主事件 0.68%）", "illbloom.org 中文盗转分析", "强"),
+        ],
+        takeaway="""\
+**枚举是算力问题，归因是人力问题。**
+
+而十三年里，归因做成的次数屈指可数 —— 最大的那个案例至今无名。
+这就是第 13 课那个「防守方人力极少」不是借口而是事实的原因。""",
+    ),
+    dict(
+        n=13, slug="attacker-tempo", title="攻击者的节奏",
         sub="唯一值得长期盯的那个数",
         anim="tempo.svg",
         anim_caption="七个案例的反应窗口。注意 2023-07-12 那条竖线上两个案例的汇合。",
@@ -636,6 +838,42 @@ Coldcard 不是没防这件事。他们装了**五道保险**，包括一个真�
 
 坏消息是它在变短，而且 2026 年发生了两次以前没发生过的事。""",
         body="""\
+<h3>为什么要等 —— 这一层比时间轴本身更重要</h3>
+<p>看到「五年」这个间隔，最容易得出的结论是「攻击者懒」或者「他们没发现」。
+两个都不对。正确的解释只有一句：</p>
+<div class="callout">
+<p><strong>扫币是整条攻击链上唯一不可逆、也唯一可被观测的动作。</strong></p>
+</div>
+<div class="tw"><table><thead><tr><th>步骤</th><th>在哪发生</th><th>别人看得见吗</th><th>能反悔吗</th></tr></thead><tbody>
+<tr><td>枚举生成器状态</td><td>离线</td><td>不可见</td><td>可重复</td></tr>
+<tr><td>派生私钥和地址</td><td>离线</td><td>不可见</td><td>可重复</td></tr>
+<tr><td>建地址索引</td><td>离线</td><td>不可见</td><td>可重复</td></tr>
+<tr><td>和链上数据比对</td><td>只读</td><td>不可见</td><td>可重复</td></tr>
+<tr><td><strong>把钱转走</strong></td><td><strong>上链</strong></td><td><strong>全世界可见</strong></td><td><strong>不可撤回</strong></td></tr>
+</tbody></table></div>
+<p>动钱那一刻，攻击者<strong>同时</strong>付出三样东西：</p>
+<ol>
+<li>不能撤回 —— 链上没有 ctrl-Z</li>
+<li>等于向全世界宣布「这个生成器坏了」—— 受害者会跑，研究者会被惊动</li>
+<li>开始和<strong>所有握着同一份名单的人</strong>赛跑 —— 名单不是他独有的</li>
+</ol>
+<p>②和③是关键：<strong>他一动手，剩下那些还没被他扫的钱就开始变得更难拿。</strong>
+所以不扫，等于把钱留在一个只有他知道密码的保险箱里 —— 而且这个保险箱不收保管费。</p>
+<p>→ <strong>那些三到六年的间隔是仓位管理，不是懒惰。</strong>
+这是整门课里最该改掉的一个直觉。</p>
+
+<h3>成本结构：为什么是「武器库」而不是「漏洞」</h3>
+<p>把攻击者的开销拆成两类，这个业务的形状立刻就清楚了：</p>
+<dl>
+<dt>资本开支（一次性）</dt><dd>枚举、派生、建索引 —— 建完就永久可用，而且<strong>不会过期</strong></dd>
+<dt>边际开支（每个案例）</dt><dd>搞清楚是哪个软件、哪些配置、哪条派生路径 ——
+第 12 课讲的就是这一半，以及它有多贵</dd>
+</dl>
+<p>但边际开支<strong>只在第一次贵</strong>：第 1 个案例要从零建工具、方法和索引基础设施；
+到第 11 个案例时它接近零 —— 索引在那、方法在那、只要换个生成器喂进去。</p>
+<p>→ <strong>这才是「武器库」这个词比「漏洞」准确的地方。</strong>
+一个漏洞会被修掉；一套索引基础设施不会。</p>
+
 <h3>2023-07-12：那不是一次事故，那是一个武器库</h3>
 <p>这一天值得单独记住：<strong>两个完全不同的软件、两个完全不同的 PRNG 缺陷、
 两个不同年份的受害群体，在同一天被一起扫了。</strong></p>
@@ -643,7 +881,7 @@ Coldcard 不是没防这件事。他们装了**五道保险**，包括一个真�
 不是「发现一个漏洞就去偷一次」，是一项<strong>持续运营的业务</strong>。</p>
 <p>这也解释了另一个案例里那个细节：<strong>攻击者挑比特币手续费低的时段搬。</strong>
 这不是抢劫，这是耐心的、经济理性的自动化运营。</p>
-<p>第 3 课那张「一次性建表，之后永久免费」的表，就是这项业务的资产。而<strong>表不会过期</strong>。</p>
+<p>第 4 课那张「一次性建表，之后永久免费」的表，就是这项业务的资产。而<strong>表不会过期</strong>。</p>
 
 <h3>2026 年的转折</h3>
 <p>以前的模式是「审计发现」或「厂商自己发现」。2026 年，<strong>攻击者两次跑在研究者前面</strong>：</p>
@@ -691,7 +929,7 @@ Coinspect 自己写进 FAQ：阴性结果只说明这个地址不在数据集里
 </ol>
 <p>而<strong>不该</strong>盯的是「弱熵事故的数量」—— 它十三年来一直是 1–2 个/年，没有下降也没有加速。
 <strong>数量不含信息，节奏含信息。</strong></p>""",
-        run=[("python3 lessons/11_attacker_tempo/tempo.py",
+        run=[("python3 lessons/13_attacker_tempo/tempo.py",
               "把七个案例的间隔列出来，并在本机量出那个攻防不对称。")],
         numbers=[
             ("≈0 到 12 年", "反应窗口的实测区间", "案例库 §5.1", "中 — 7 个数据点"),
@@ -706,7 +944,7 @@ Coinspect 自己写进 FAQ：阴性结果只说明这个地址不在数据集里
 三年没动的人，在某一天一次性全部失去。""",
     ),
     dict(
-        n=12, slug="prediction", title="一个可证伪的赌注",
+        n=14, slug="prediction", title="一个可证伪的赌注",
         sub="十一个案例，一个形状",
         plain="""\
 这门课只有一个发现。
@@ -775,7 +1013,7 @@ Coinspect 自己写进 FAQ：阴性结果只说明这个地址不在数据集里
 <li><strong>形状吻合。</strong>共同形状是「写一个看起来对的包装层」，
 而这恰好是语言模型最擅长、也最容易出错的事情 ——
 它会生成惯用、通过评审、测试跑得通的代码。弱熵正是那种 bug。</li>
-<li><strong>第 2 课那个细节。</strong>修复被「向后兼容」压了回去。
+<li><strong>第 3 课那个细节。</strong>修复被「向后兼容」压了回去。
 这不是编码失误，是组织决策失误。AI 写代码不会改善这个。</li>
 </ol>
 <p>反方向的一条证据也必须说：专门找过「AI 生成的加密货币恶意软件」的一手证据，<strong>找不到</strong>。
@@ -787,10 +1025,10 @@ Coinspect 自己写进 FAQ：阴性结果只说明这个地址不在数据集里
 并用历史案例的转录做回归测试。还有一份<strong>取样实验的规程</strong>
 （含五个确切的 prompt），让你自己去测模型在约束下往哪边倒。</p>
 <p><strong>这个实验的结果我没有，所以课程里没有结论。等你跑完，结论才存在。</strong></p>""",
-        run=[("python3 lessons/12_prediction/prediction.py", "把那张表和赌注过一遍，并跑嗅探器的回归测试。"),
-             ("python3 lessons/12_prediction/audit_wallet_code.py samples/*",
+        run=[("python3 lessons/14_prediction/prediction.py", "把那张表和赌注过一遍，并跑嗅探器的回归测试。"),
+             ("python3 lessons/14_prediction/audit_wallet_code.py samples/*",
               "对历史案例的转录跑一遍嗅探器。"),
-             ("cat lessons/12_prediction/collect_ai_samples.md", "取样实验的完整规程。")],
+             ("cat lessons/14_prediction/collect_ai_samples.md", "取样实验的完整规程。")],
         numbers=[
             ("11 / 11", "出在包装层的案例数 / 总案例数", "案例库 §1.4", "强"),
             ("0", "已知的、坏包装层由 AI 写出的案例数", "本课的诚实标注", "零证据"),

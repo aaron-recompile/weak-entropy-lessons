@@ -176,32 +176,35 @@ footer a{color:var(--muted)}
 </style>
 </head>
 <body>
-<header class="topbar"><div class="wrap"><a class="brand" href="index.html">弱熵的统一规律 <span>· 一门可以自己跑的课</span></a><nav class="topnav"><a href="index.html" aria-current="page">目录</a><a href="01-milk-sad.html" title="强随机数没有「第一个钱包」">01</a><a href="02-ill-bloom.html" title="一个坏掉的随机数，活了十二年">02</a><a href="03-trust-wallet.html" title="2³² 到底有多小">03</a><a href="04-cake-wallet.html" title="不安全的那个是默认值">04</a><a href="05-php-mt-rand.html" title="同一段代码，三个弱钱包范围">05</a><a href="06-brainwallet.html" title="人选的口令">06</a><a href="07-coldcard.html" title="这次失败，恰恰来自那个冲突的缺席">07</a><a href="08-xor.html" title="XOR 不生产随机性">08</a><a href="09-pbkdf2.html" title="PBKDF2 救不了你">09</a><a href="10-five-guards.html" title="五道保险，五道都没响">10</a><a href="11-attacker-tempo.html" title="攻击者的节奏">11</a><a href="12-prediction.html" title="一个可证伪的赌注">12</a></nav></div></header>
+<header class="topbar"><div class="wrap"><a class="brand" href="index.html">弱熵的统一规律 <span>· 一门可以自己跑的课</span></a><nav class="topnav"><a href="index.html" aria-current="page">目录</a><a href="01-recompute.html" title="不是碰撞，是重算">01</a><a href="02-milk-sad.html" title="强随机数没有「第一个钱包」">02</a><a href="03-ill-bloom.html" title="一个坏掉的随机数，活了十二年">03</a><a href="04-trust-wallet.html" title="2³² 到底有多小">04</a><a href="05-cake-wallet.html" title="不安全的那个是默认值">05</a><a href="06-php-mt-rand.html" title="同一段代码，三个弱钱包范围">06</a><a href="07-brainwallet.html" title="人选的口令">07</a><a href="08-coldcard.html" title="这次失败，恰恰来自那个冲突的缺席">08</a><a href="09-xor.html" title="XOR 不生产随机性">09</a><a href="10-pbkdf2.html" title="PBKDF2 救不了你">10</a><a href="11-five-guards.html" title="五道保险，五道都没响">11</a><a href="12-attribution.html" title="从链上反推到是哪个软件">12</a><a href="13-attacker-tempo.html" title="攻击者的节奏">13</a><a href="14-prediction.html" title="一个可证伪的赌注">14</a></nav></div></header>
 <main class="wrap">
 <div class="hero">
-<p class="kicker">一门可以自己跑的课 · 共 12 课</p>
+<p class="kicker">一门可以自己跑的课 · 共 14 课</p>
 <h1>弱熵的统一规律</h1>
 <p class="sub">十三年，十一个案例，一个形状 —— 一门可以自己跑的课</p>
 </div>
 <div class="plain"><span class="tag">先看这个</span><p>比特币的私钥安全不是一件事，是三道门串在一起：<strong>①造钥匙 ②存钥匙 ③用钥匙</strong>。</p>
 <p>全世界讨论的是门 2（设备会不会被攻破）和门 3（签名的时候会不会被骗）。<br>但钱主要是从门 1 丢的 —— 从<strong>造钥匙</strong>那一步丢的。</p>
 <p>原因只有一个：<strong>只有门 1 的失败是静默的。</strong><br>门 2 失败你知道，东西丢了。门 3 失败你看得见，屏幕上地址不对。<br>门 1 失败什么都看不出来 —— 钱包正常，余额对，能收能发，二十四个词好好躺在抽屉里，<br>直到某一天余额是 0。</p>
-<p>这门课讲的就是门 1。十三年，十一个独立案例，十一个不同的团队。<br>它们有一个共同点，而那个共同点比「随机数很难」具体得多，也有用得多。</p></div>
+<p>这门课讲的就是门 1。十三年，十一个独立案例，十一个不同的团队。<br>它们有一个共同点，而那个共同点比「随机数很难」具体得多，也有用得多。</p>
+<p><strong>从第 1 课开始</strong>：它只讲一件事 —— 攻击者不是在猜你的钥匙，<br>而是在<strong>重新运行当年生成你钥匙的那段代码</strong>。<br>这个区分决定了后面每一课能不能被正确理解。</p></div>
 <div class="disclaim"><strong>免责：</strong>本课程复现的全部是<strong>已被公开披露并已修复</strong>的历史缺陷，用于教学。所有实验使用固定的 demo 种子，不生成任何真实钱包，不联网，不查询任何地址。Coldcard 相关材料全部来自外部公开出处。</div>
 <h2>课程目录</h2>
 <ul class="toc">
-<li><a href="01-milk-sad.html"><span class="num">01</span><span class="body"><span class="ttl">强随机数没有「第一个钱包」</span><span class="sub2">bx seed / Milk Sad · CVE-2023-39910</span></span></a></li>
-<li><a href="02-ill-bloom.html"><span class="num">02</span><span class="body"><span class="ttl">一个坏掉的随机数，活了十二年</span><span class="sub2">CryptoJS / Ill Bloom · CVE-2026-71851</span></span></a></li>
-<li><a href="03-trust-wallet.html"><span class="num">03</span><span class="body"><span class="ttl">2³² 到底有多小</span><span class="sub2">Trust Wallet 浏览器扩展 · CVE-2023-31290</span></span></a></li>
-<li><a href="04-cake-wallet.html"><span class="num">04</span><span class="body"><span class="ttl">不安全的那个是默认值</span><span class="sub2">Cake Wallet · 2020–2021</span></span></a></li>
-<li><a href="05-php-mt-rand.html"><span class="num">05</span><span class="body"><span class="ttl">同一段代码，三个弱钱包范围</span><span class="sub2">PHPCoinAddress · 2013–2018</span></span></a></li>
-<li><a href="06-brainwallet.html"><span class="num">06</span><span class="body"><span class="ttl">人选的口令</span><span class="sub2">脑钱包 · 2009 至今</span></span></a></li>
-<li><a href="07-coldcard.html"><span class="num">07</span><span class="body"><span class="ttl">这次失败，恰恰来自那个冲突的缺席</span><span class="sub2">Coldcard · 2021-03 → 2026-07 · 本课最难也最值钱</span></span></a></li>
-<li><a href="08-xor.html"><span class="num">08</span><span class="body"><span class="ttl">XOR 不生产随机性</span><span class="sub2">H(A⊕B) ≤ H(A) + H(B)</span></span></a></li>
-<li><a href="09-pbkdf2.html"><span class="num">09</span><span class="body"><span class="ttl">PBKDF2 救不了你</span><span class="sub2">常数补不回指数</span></span></a></li>
-<li><a href="10-five-guards.html"><span class="num">10</span><span class="body"><span class="ttl">五道保险，五道都没响</span><span class="sub2">因为五道都在检查输出</span></span></a></li>
-<li><a href="11-attacker-tempo.html"><span class="num">11</span><span class="body"><span class="ttl">攻击者的节奏</span><span class="sub2">唯一值得长期盯的那个数</span></span></a></li>
-<li><a href="12-prediction.html"><span class="num">12</span><span class="body"><span class="ttl">一个可证伪的赌注</span><span class="sub2">十一个案例，一个形状</span></span></a></li>
+<li><a href="01-recompute.html"><span class="num">01</span><span class="body"><span class="ttl">不是碰撞，是重算</span><span class="sub2">后面十三课的第一性原理</span></span></a></li>
+<li><a href="02-milk-sad.html"><span class="num">02</span><span class="body"><span class="ttl">强随机数没有「第一个钱包」</span><span class="sub2">bx seed / Milk Sad · CVE-2023-39910</span></span></a></li>
+<li><a href="03-ill-bloom.html"><span class="num">03</span><span class="body"><span class="ttl">一个坏掉的随机数，活了十二年</span><span class="sub2">CryptoJS / Ill Bloom · CVE-2026-71851</span></span></a></li>
+<li><a href="04-trust-wallet.html"><span class="num">04</span><span class="body"><span class="ttl">2³² 到底有多小</span><span class="sub2">Trust Wallet 浏览器扩展 · CVE-2023-31290</span></span></a></li>
+<li><a href="05-cake-wallet.html"><span class="num">05</span><span class="body"><span class="ttl">不安全的那个是默认值</span><span class="sub2">Cake Wallet · 2020–2021</span></span></a></li>
+<li><a href="06-php-mt-rand.html"><span class="num">06</span><span class="body"><span class="ttl">同一段代码，三个弱钱包范围</span><span class="sub2">PHPCoinAddress · 2013–2018</span></span></a></li>
+<li><a href="07-brainwallet.html"><span class="num">07</span><span class="body"><span class="ttl">人选的口令</span><span class="sub2">脑钱包 · 2009 至今</span></span></a></li>
+<li><a href="08-coldcard.html"><span class="num">08</span><span class="body"><span class="ttl">这次失败，恰恰来自那个冲突的缺席</span><span class="sub2">Coldcard · 2021-03 → 2026-07 · 本课最难也最值钱</span></span></a></li>
+<li><a href="09-xor.html"><span class="num">09</span><span class="body"><span class="ttl">XOR 不生产随机性</span><span class="sub2">H(A⊕B) ≤ H(A) + H(B)</span></span></a></li>
+<li><a href="10-pbkdf2.html"><span class="num">10</span><span class="body"><span class="ttl">PBKDF2 救不了你</span><span class="sub2">常数补不回指数</span></span></a></li>
+<li><a href="11-five-guards.html"><span class="num">11</span><span class="body"><span class="ttl">五道保险，五道都没响</span><span class="sub2">因为五道都在检查输出</span></span></a></li>
+<li><a href="12-attribution.html"><span class="num">12</span><span class="body"><span class="ttl">从链上反推到是哪个软件</span><span class="sub2">Coinspect 的侦探活 · 枚举完只做了一半</span></span></a></li>
+<li><a href="13-attacker-tempo.html"><span class="num">13</span><span class="body"><span class="ttl">攻击者的节奏</span><span class="sub2">唯一值得长期盯的那个数</span></span></a></li>
+<li><a href="14-prediction.html"><span class="num">14</span><span class="body"><span class="ttl">一个可证伪的赌注</span><span class="sub2">十一个案例，一个形状</span></span></a></li>
 </ul>
 
 <h2>怎么开始</h2>

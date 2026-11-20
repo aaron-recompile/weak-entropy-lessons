@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PBKDF2 救不了你 · 第 10 课</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* 版面：单栏阅读流，顶部固定导航；大白话卡片用左侧强调线和更大的字号把它顶到最前面 */
+:root{
+  --bg:#f7f6f3; --surface:#fff; --surface-2:#f0eee9;
+  --ink:#1b1a19; --muted:#6f6a63; --rule:#e2ded6;
+  --accent:#2d5d7c; --weak:#a32d2f; --sound:#1f6f4a; --warnbg:#fdf6ec;
+  --display:"Space Grotesk","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --body:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#131316; --surface:#1c1c21; --surface-2:#232329;
+  --ink:#e8e6e3; --muted:#9a958e; --rule:#2e2e36;
+  --accent:#7fb3d5; --weak:#ff8f8a; --sound:#6fd9a4; --warnbg:#262017;
+  color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#131316; --surface:#1c1c21; --surface-2:#232329;
+  --ink:#e8e6e3; --muted:#9a958e; --rule:#2e2e36;
+  --accent:#7fb3d5; --weak:#ff8f8a; --sound:#6fd9a4; --warnbg:#262017;
+  color-scheme:dark; }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);
+  font-size:16.5px;line-height:1.75;-webkit-text-size-adjust:100%}
+.wrap{max-width:760px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 72px}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+
+/* 顶栏 */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;
+  background:var(--bg);border-bottom:1px solid var(--rule)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);
+  z-index:21;background:var(--bg)}
+.topbar .wrap{display:flex;align-items:center;gap:12px;padding-block:10px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:700;font-size:14.5px;letter-spacing:.01em;
+  color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand span{color:var(--muted);font-weight:500}
+.topnav{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}
+.topnav a{font-family:var(--mono);font-size:12px;text-decoration:none;color:var(--muted);
+  padding:3px 7px;border-radius:4px;min-width:28px;text-align:center}
+.topnav a:hover{background:var(--surface-2);color:var(--ink)}
+.topnav a[aria-current]{background:var(--accent);color:var(--bg);font-weight:600}
+
+/* 课头 */
+.lesson-head{padding-block:40px 8px;border-bottom:1px solid var(--rule);margin-bottom:32px}
+.kicker{font-family:var(--mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 10px}
+h1{font-family:var(--display);font-size:clamp(28px,6vw,40px);line-height:1.2;margin:0 0 10px;
+  letter-spacing:-.015em;text-wrap:balance;font-weight:700}
+.sub{color:var(--muted);font-size:14.5px;margin:0 0 28px;font-family:var(--mono)}
+
+/* 大白话 */
+.plain{background:var(--surface);border:1px solid var(--rule);border-left:4px solid var(--accent);
+  border-radius:0 10px 10px 0;padding:22px 24px;margin:0 0 40px;font-size:17.5px;line-height:1.8}
+.plain .tag{display:block;font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:12px;font-weight:600}
+.plain p{margin:0 0 16px}
+.plain p:last-child{margin-bottom:0}
+.plain blockquote{margin:16px 0;padding:12px 16px;background:var(--surface-2);border-radius:8px;
+  font-family:var(--mono);font-size:14px;line-height:1.7;border:0}
+
+h2{font-family:var(--display);font-size:22px;margin:44px 0 14px;letter-spacing:-.01em;text-wrap:balance}
+h3{font-family:var(--display);font-size:17.5px;margin:34px 0 10px;letter-spacing:-.005em}
+h4{font-family:var(--display);font-size:15.5px;margin:0 0 8px}
+p{margin:0 0 16px}
+ul,ol,dl{margin:0 0 16px;padding-left:1.4em}
+li{margin:0 0 8px}
+dl{padding-left:0} dt{font-weight:600;margin-top:12px} dd{margin:0 0 8px 1.2em;color:var(--muted)}
+strong{font-weight:650}
+blockquote{margin:20px 0;padding:14px 18px;border-left:3px solid var(--rule);
+  color:var(--ink);background:var(--surface);border-radius:0 8px 8px 0}
+blockquote cite{display:block;margin-top:8px;font-style:normal;font-size:13.5px;color:var(--muted)}
+code{font-family:var(--mono);font-size:.88em;background:var(--surface-2);
+  padding:.12em .36em;border-radius:4px;word-break:break-word}
+pre{background:var(--surface);border:1px solid var(--rule);border-radius:9px;
+  padding:14px 16px;overflow-x:auto;margin:0 0 16px}
+pre code{background:none;padding:0;font-size:13px;line-height:1.65;white-space:pre}
+
+/* 表 */
+.tw{overflow-x:auto;margin:0 0 20px;border:1px solid var(--rule);border-radius:9px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:0}
+th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--display);font-weight:600;font-size:13.5px;background:var(--surface-2);
+  white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td:first-child{font-variant-numeric:tabular-nums}
+
+/* 提示块 */
+.callout{background:var(--surface);border:1px solid var(--rule);border-radius:10px;
+  padding:18px 20px;margin:0 0 20px}
+.callout p:last-child,.callout ul:last-child,.callout ol:last-child{margin-bottom:0}
+.callout.warn{background:var(--warnbg);border-color:color-mix(in srgb,var(--weak) 30%,var(--rule))}
+.callout.good{border-color:color-mix(in srgb,var(--sound) 40%,var(--rule))}
+
+/* 动图 */
+figure{margin:28px 0;border:1px solid var(--rule);border-radius:10px;overflow:hidden;
+  background:var(--surface)}
+figure svg,figure img{display:block;width:100%;height:auto;max-width:100%}
+figcaption{padding:11px 16px;font-size:13.5px;color:var(--muted);border-top:1px solid var(--rule);
+  background:var(--surface-2)}
+
+/* 跑一下 */
+.run{margin:0 0 20px}
+.run-item{border:1px solid var(--rule);border-radius:9px;margin:0 0 12px;overflow:hidden;
+  background:var(--surface)}
+.cmdbar{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-2);
+  border-bottom:1px solid var(--rule)}
+.cmdbar code{background:none;padding:0;font-size:13px;flex:1;min-width:0;overflow-x:auto;
+  white-space:pre}
+.copy{flex:none;font-family:var(--mono);font-size:11.5px;border:1px solid var(--rule);
+  background:var(--surface);color:var(--muted);border-radius:5px;padding:3px 9px;cursor:pointer}
+.copy:hover{color:var(--ink);border-color:var(--accent)}
+.copy[data-done]{color:var(--sound);border-color:var(--sound)}
+.run-item p{margin:0;padding:11px 14px;font-size:14.5px;color:var(--muted)}
+
+/* 证据分级 */
+.ev{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:999px;
+  border:1px solid currentColor;white-space:nowrap}
+.ev-s{color:var(--sound)} .ev-m{color:var(--accent)} .ev-w{color:var(--weak)}
+
+/* 带走 */
+.takeaway{background:var(--surface-2);border-radius:10px;padding:20px 22px;margin:36px 0 0;
+  border:1px solid var(--rule)}
+.takeaway .tag{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);display:block;margin-bottom:10px}
+.takeaway p:last-child{margin-bottom:0}
+
+/* 上一课 / 下一课 */
+.pager{display:flex;gap:12px;margin-top:48px;padding-top:24px;border-top:1px solid var(--rule);
+  flex-wrap:wrap}
+.pager a{flex:1 1 220px;min-width:0;text-decoration:none;border:1px solid var(--rule);
+  border-radius:10px;padding:14px 16px;background:var(--surface);color:var(--ink)}
+.pager a:hover{border-color:var(--accent)}
+.pager .dir{display:block;font-family:var(--mono);font-size:11.5px;color:var(--muted);
+  margin-bottom:4px}
+.pager .ttl{font-family:var(--display);font-size:15px;font-weight:600}
+.pager .next{text-align:right}
+
+/* 首页 */
+.hero{padding-block:48px 8px}
+.toc{display:grid;gap:10px;margin:0 0 40px;padding:0;list-style:none}
+.toc a{display:flex;gap:14px;align-items:baseline;text-decoration:none;border:1px solid var(--rule);
+  border-radius:10px;padding:14px 16px;background:var(--surface);color:var(--ink)}
+.toc a:hover{border-color:var(--accent)}
+.toc .num{font-family:var(--mono);font-size:13px;color:var(--accent);flex:none;font-weight:600}
+.toc .body{min-width:0}
+.toc .ttl{font-family:var(--display);font-weight:600;font-size:16px;display:block;line-height:1.4}
+.toc .sub2{font-size:13.5px;color:var(--muted);display:block;margin-top:2px}
+.disclaim{border:1px solid color-mix(in srgb,var(--weak) 35%,var(--rule));border-radius:10px;
+  padding:16px 18px;margin:0 0 32px;background:var(--warnbg);font-size:14.5px}
+.disclaim strong{color:var(--weak)}
+footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--rule);
+  font-size:13.5px;color:var(--muted)}
+footer a{color:var(--muted)}
+@media (max-width:520px){
+  body{font-size:16px}
+  .plain{font-size:16.5px;padding:18px 18px}
+  .brand span{display:none}
+  .topbar .wrap{padding-block:8px;gap:8px;flex-wrap:nowrap}
+  .topnav{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  .topnav::-webkit-scrollbar{display:none}
+  .topnav a{font-size:11.5px;padding:3px 6px;min-width:0;flex:none}
+}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="wrap"><a class="brand" href="index.html">弱熵的统一规律 <span>· 一门可以自己跑的课</span></a><nav class="topnav"><a href="index.html">目录</a><a href="01-recompute.html" title="不是碰撞，是重算">01</a><a href="02-milk-sad.html" title="强随机数没有「第一个钱包」">02</a><a href="03-ill-bloom.html" title="一个坏掉的随机数，活了十二年">03</a><a href="04-trust-wallet.html" title="2³² 到底有多小">04</a><a href="05-cake-wallet.html" title="不安全的那个是默认值">05</a><a href="06-php-mt-rand.html" title="同一段代码，三个弱钱包范围">06</a><a href="07-brainwallet.html" title="人选的口令">07</a><a href="08-coldcard.html" title="这次失败，恰恰来自那个冲突的缺席">08</a><a href="09-xor.html" title="XOR 不生产随机性">09</a><a href="10-pbkdf2.html" aria-current="page" title="PBKDF2 救不了你">10</a><a href="11-five-guards.html" title="五道保险，五道都没响">11</a><a href="12-attribution.html" title="从链上反推到是哪个软件">12</a><a href="13-attacker-tempo.html" title="攻击者的节奏">13</a><a href="14-prediction.html" title="一个可证伪的赌注">14</a></nav></div></header>
+<main class="wrap">
+<div class="lesson-head">
+<p class="kicker">第 10 课 / 共 14 课</p>
+<h1>PBKDF2 救不了你</h1>
+<p class="sub">常数补不回指数</p>
+</div>
+<div class="plain"><span class="tag">大白话</span><p>有一个很常见的直觉：</p>
+<blockquote>就算熵弱一点，BIP39 还有 2048 轮 PBKDF2 拉伸啊 —— 攻击者每试一个候选都要付这个代价，所以还是很贵。</blockquote>
+<p>前半句对，后半句错。为什么：</p>
+<p><strong>KDF 是乘法性的</strong> —— 它把每个候选的成本乘上一个常数。<br><strong>熵是指数性的</strong> —— 它决定候选的<strong>个数</strong>。</p>
+<p>丢掉 96 位熵，是把候选个数从 2¹²⁸ 变成 2³²。<br>要靠 KDF 补回来，那个常数得等于 2⁹⁶ —— 那意味着你自己每次解锁钱包也要等 2⁹⁶ 份时间。</p>
+<p>一句话：<strong>KDF 是按线性收费的保险，熵是按指数收费的保险。它们不在一个量级上。</strong></p></div>
+<h2>往下一层</h2>
+<h3>把那个常数量出来</h3>
+<p>课程代码在你自己机器上测两种量法，给出一个上界和一个下界：</p>
+<ul>
+<li>只比 KDF 那一步（PBKDF2 对裸哈希）：约 <strong>1,100 倍 ≈ 10 位</strong></li>
+<li>比两条完整的候选链（PBKDF2 + BIP32 + 地址）：约 <strong>4 倍 ≈ 2 位</strong></li>
+</ul>
+<p><strong>上界十位，下界两位。无论怎么量，它都是个「十位以内」的常数。</strong>
+而弱熵一次丢掉的是几十位到一百位。</p>
+
+<h3>Wizardsardine 的那句话</h3>
+<blockquote>攻击并不是在 2¹²⁸ 个助记词里走，它是在<strong>生成器的状态空间</strong>里走。
+在那个尺度上，PBKDF2 只是把秒变成分钟。</blockquote>
+<p>他们实测单张 RTX 4090 约 150 万个<strong>完整</strong>候选/秒 ——
+而这个 150 万<strong>已经包含了</strong> PBKDF2、BIP32 派生和地址查表。
+2²² / 150 万 = <strong>3 秒</strong>。这就是「只是把秒变成分钟」的字面意思。</p>
+
+<h3>三个推论</h3>
+<ol>
+<li><strong>纸钱包比助记词便宜得多。</strong>纸钱包的私钥是生成器的<strong>原始输出</strong>，
+不走 PBKDF2 也不走 BIP32。所以在同一个弱熵事故里，纸钱包那批先被清。</li>
+<li><strong>强 passphrase 是唯一一个真正「再乘一个空间」的东西。</strong>
+注意区别：passphrase 加的是<strong>位</strong>，KDF 加的是<strong>倍</strong>。
+所有爆破成本表都假设 passphrase 是空的。</li>
+<li><strong>BIP-85 恰好等于父种子的价值。</strong>它是确定性派生的 ——
+父种子弱，所有子钱包一起弱。这条容易被漏掉，因为 BIP-85 给人一种「每个子钱包独立」的错觉。</li>
+</ol>
+<h2>自己跑一下</h2>
+<div class="run">
+<div class="run-item"><div class="cmdbar"><code>python3 lessons/10_pbkdf2/pbkdf2_wont_save_you.py</code><button class="copy" type="button">复制</button></div><p>在本机量出那个常数，算出「要补回 Mk3 丢掉的熵需要多少轮迭代」，并拆解完整攻击链的每一环。</p></div>
+</div>
+<h2>数字与出处</h2>
+<div class="tw"><table><thead><tr><th>数字</th><th>是什么</th><th>出处</th><th>证据</th></tr></thead><tbody>
+<tr><td><strong>2048 轮 ≈ 10 位</strong></td><td>BIP39 的 KDF 买到的熵（上界口径）</td><td>本课在本机实测</td><td><span class="ev ev-s">很强（可自证）</span></td></tr>
+<tr><td><strong>2¹⁰⁶</strong></td><td>要让 2²² 的总成本等于 2¹²⁸ 所需的每候选工作量</td><td>算术</td><td><span class="ev ev-s">很强</span></td></tr>
+<tr><td><strong>150 万/秒</strong></td><td>单张 RTX 4090 的完整候选速率（含 PBKDF2）</td><td>Wizardsardine 2026-08-11</td><td><span class="ev ev-s">很强</span></td></tr>
+</tbody></table></div>
+<div class="takeaway"><span class="tag">带走这个</span><p>这一课和上一课是一对：<strong>XOR 不加熵，KDF 不加熵。</strong></p>
+<p>能加熵的只有两样东西：一个真正不可预测的源，或者一个你自己知道而别人不知道的秘密<br>（passphrase、骰子）。除此之外的一切都是在搬运已经有的那些位。</p></div>
+<nav class="pager">
+<a href="09-xor.html"><span class="dir">← 上一课</span><span class="ttl">XOR 不生产随机性</span></a>
+<a class="next" href="11-five-guards.html"><span class="dir">下一课 →</span><span class="ttl">五道保险，五道都没响</span></a>
+</nav>
+<div class="disclaim"><strong>免责：</strong>本课复现的是<strong>已被公开披露并已修复</strong>的历史缺陷，用于教学。固定 demo 种子，不联网，不碰任何真实密钥。如果你怀疑自己的钱包受影响，不要用这里的代码去验证 —— 去看厂商官方公告。</div><footer><p>弱熵的统一规律 · 代码与动图：<a href="https://github.com/aaron-recompile/weak-entropy-lessons">GitHub</a>。每一课的代码都能用 <code>python3</code> 一行跑出结果。</p><p>所有数字带出处和证据分级。标「弱」的不要单独使用。</p></footer>
+</main>
+<script>
+document.querySelectorAll('.copy').forEach(function(b){
+  b.addEventListener('click', function(){
+    var t = b.closest('.cmdbar').querySelector('code').textContent;
+    function done(){ b.dataset.done='1'; b.textContent='已复制';
+      setTimeout(function(){ delete b.dataset.done; b.textContent='复制'; }, 1600); }
+    try {
+      navigator.clipboard.writeText(t).then(done, select);
+    } catch(e){ select(); }
+    function select(){
+      var r=document.createRange(); r.selectNodeContents(b.closest('.cmdbar').querySelector('code'));
+      var s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent='已选中，按 ⌘C';
+      setTimeout(function(){ b.textContent='复制'; }, 2400);
+    }
+  });
+});
+</script>
+</body>
+</html>

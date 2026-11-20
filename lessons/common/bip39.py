@@ -1,7 +1,7 @@
 """
 BIP39：把一串字节变成助记词。纯标准库，没有依赖。
 
-要点（第 9 课会用到）：这一步是**完全可逆的编码**，不是加密，不增加任何熵。
+要点（第 10 课会用到）：这一步是**完全可逆的编码**，不是加密，不增加任何熵。
 32 字节熵 → 24 个词。弱的 32 字节，变成弱的 24 个词，一个字节的秘密都没多出来。
 """
 import hashlib
@@ -56,13 +56,13 @@ def mnemonic_to_entropy(mnemonic: str) -> bytes:
 
 
 def mnemonic_to_seed(mnemonic: str, passphrase: str = "") -> bytes:
-    """BIP39 的 2048 轮 PBKDF2-HMAC-SHA512。第 9 课专门拆这一步。"""
+    """BIP39 的 2048 轮 PBKDF2-HMAC-SHA512。第 10 课专门拆这一步。"""
     m = unicodedata.normalize("NFKD", mnemonic).encode()
     salt = unicodedata.normalize("NFKD", "mnemonic" + passphrase).encode()
     return hashlib.pbkdf2_hmac("sha512", m, salt, 2048, 64)
 
 
-# --- BIP32 主私钥（为了能把种子推到地址，第 1 课要用） ---
+# --- BIP32 主私钥（为了能把种子推到地址，第 2 课要用） ---
 
 def seed_to_master_key(seed: bytes):
     I = hmac.new(b"Bitcoin seed", seed, hashlib.sha512).digest()

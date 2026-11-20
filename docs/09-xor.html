@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>XOR 不生产随机性 · 第 09 课</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* 版面：单栏阅读流，顶部固定导航；大白话卡片用左侧强调线和更大的字号把它顶到最前面 */
+:root{
+  --bg:#f7f6f3; --surface:#fff; --surface-2:#f0eee9;
+  --ink:#1b1a19; --muted:#6f6a63; --rule:#e2ded6;
+  --accent:#2d5d7c; --weak:#a32d2f; --sound:#1f6f4a; --warnbg:#fdf6ec;
+  --display:"Space Grotesk","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --body:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#131316; --surface:#1c1c21; --surface-2:#232329;
+  --ink:#e8e6e3; --muted:#9a958e; --rule:#2e2e36;
+  --accent:#7fb3d5; --weak:#ff8f8a; --sound:#6fd9a4; --warnbg:#262017;
+  color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#131316; --surface:#1c1c21; --surface-2:#232329;
+  --ink:#e8e6e3; --muted:#9a958e; --rule:#2e2e36;
+  --accent:#7fb3d5; --weak:#ff8f8a; --sound:#6fd9a4; --warnbg:#262017;
+  color-scheme:dark; }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);
+  font-size:16.5px;line-height:1.75;-webkit-text-size-adjust:100%}
+.wrap{max-width:760px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 72px}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+
+/* 顶栏 */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;
+  background:var(--bg);border-bottom:1px solid var(--rule)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);
+  z-index:21;background:var(--bg)}
+.topbar .wrap{display:flex;align-items:center;gap:12px;padding-block:10px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:700;font-size:14.5px;letter-spacing:.01em;
+  color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand span{color:var(--muted);font-weight:500}
+.topnav{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}
+.topnav a{font-family:var(--mono);font-size:12px;text-decoration:none;color:var(--muted);
+  padding:3px 7px;border-radius:4px;min-width:28px;text-align:center}
+.topnav a:hover{background:var(--surface-2);color:var(--ink)}
+.topnav a[aria-current]{background:var(--accent);color:var(--bg);font-weight:600}
+
+/* 课头 */
+.lesson-head{padding-block:40px 8px;border-bottom:1px solid var(--rule);margin-bottom:32px}
+.kicker{font-family:var(--mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 10px}
+h1{font-family:var(--display);font-size:clamp(28px,6vw,40px);line-height:1.2;margin:0 0 10px;
+  letter-spacing:-.015em;text-wrap:balance;font-weight:700}
+.sub{color:var(--muted);font-size:14.5px;margin:0 0 28px;font-family:var(--mono)}
+
+/* 大白话 */
+.plain{background:var(--surface);border:1px solid var(--rule);border-left:4px solid var(--accent);
+  border-radius:0 10px 10px 0;padding:22px 24px;margin:0 0 40px;font-size:17.5px;line-height:1.8}
+.plain .tag{display:block;font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:12px;font-weight:600}
+.plain p{margin:0 0 16px}
+.plain p:last-child{margin-bottom:0}
+.plain blockquote{margin:16px 0;padding:12px 16px;background:var(--surface-2);border-radius:8px;
+  font-family:var(--mono);font-size:14px;line-height:1.7;border:0}
+
+h2{font-family:var(--display);font-size:22px;margin:44px 0 14px;letter-spacing:-.01em;text-wrap:balance}
+h3{font-family:var(--display);font-size:17.5px;margin:34px 0 10px;letter-spacing:-.005em}
+h4{font-family:var(--display);font-size:15.5px;margin:0 0 8px}
+p{margin:0 0 16px}
+ul,ol,dl{margin:0 0 16px;padding-left:1.4em}
+li{margin:0 0 8px}
+dl{padding-left:0} dt{font-weight:600;margin-top:12px} dd{margin:0 0 8px 1.2em;color:var(--muted)}
+strong{font-weight:650}
+blockquote{margin:20px 0;padding:14px 18px;border-left:3px solid var(--rule);
+  color:var(--ink);background:var(--surface);border-radius:0 8px 8px 0}
+blockquote cite{display:block;margin-top:8px;font-style:normal;font-size:13.5px;color:var(--muted)}
+code{font-family:var(--mono);font-size:.88em;background:var(--surface-2);
+  padding:.12em .36em;border-radius:4px;word-break:break-word}
+pre{background:var(--surface);border:1px solid var(--rule);border-radius:9px;
+  padding:14px 16px;overflow-x:auto;margin:0 0 16px}
+pre code{background:none;padding:0;font-size:13px;line-height:1.65;white-space:pre}
+
+/* 表 */
+.tw{overflow-x:auto;margin:0 0 20px;border:1px solid var(--rule);border-radius:9px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:0}
+th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--display);font-weight:600;font-size:13.5px;background:var(--surface-2);
+  white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td:first-child{font-variant-numeric:tabular-nums}
+
+/* 提示块 */
+.callout{background:var(--surface);border:1px solid var(--rule);border-radius:10px;
+  padding:18px 20px;margin:0 0 20px}
+.callout p:last-child,.callout ul:last-child,.callout ol:last-child{margin-bottom:0}
+.callout.warn{background:var(--warnbg);border-color:color-mix(in srgb,var(--weak) 30%,var(--rule))}
+.callout.good{border-color:color-mix(in srgb,var(--sound) 40%,var(--rule))}
+
+/* 动图 */
+figure{margin:28px 0;border:1px solid var(--rule);border-radius:10px;overflow:hidden;
+  background:var(--surface)}
+figure svg,figure img{display:block;width:100%;height:auto;max-width:100%}
+figcaption{padding:11px 16px;font-size:13.5px;color:var(--muted);border-top:1px solid var(--rule);
+  background:var(--surface-2)}
+
+/* 跑一下 */
+.run{margin:0 0 20px}
+.run-item{border:1px solid var(--rule);border-radius:9px;margin:0 0 12px;overflow:hidden;
+  background:var(--surface)}
+.cmdbar{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-2);
+  border-bottom:1px solid var(--rule)}
+.cmdbar code{background:none;padding:0;font-size:13px;flex:1;min-width:0;overflow-x:auto;
+  white-space:pre}
+.copy{flex:none;font-family:var(--mono);font-size:11.5px;border:1px solid var(--rule);
+  background:var(--surface);color:var(--muted);border-radius:5px;padding:3px 9px;cursor:pointer}
+.copy:hover{color:var(--ink);border-color:var(--accent)}
+.copy[data-done]{color:var(--sound);border-color:var(--sound)}
+.run-item p{margin:0;padding:11px 14px;font-size:14.5px;color:var(--muted)}
+
+/* 证据分级 */
+.ev{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:999px;
+  border:1px solid currentColor;white-space:nowrap}
+.ev-s{color:var(--sound)} .ev-m{color:var(--accent)} .ev-w{color:var(--weak)}
+
+/* 带走 */
+.takeaway{background:var(--surface-2);border-radius:10px;padding:20px 22px;margin:36px 0 0;
+  border:1px solid var(--rule)}
+.takeaway .tag{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);display:block;margin-bottom:10px}
+.takeaway p:last-child{margin-bottom:0}
+
+/* 上一课 / 下一课 */
+.pager{display:flex;gap:12px;margin-top:48px;padding-top:24px;border-top:1px solid var(--rule);
+  flex-wrap:wrap}
+.pager a{flex:1 1 220px;min-width:0;text-decoration:none;border:1px solid var(--rule);
+  border-radius:10px;padding:14px 16px;background:var(--surface);color:var(--ink)}
+.pager a:hover{border-color:var(--accent)}
+.pager .dir{display:block;font-family:var(--mono);font-size:11.5px;color:var(--muted);
+  margin-bottom:4px}
+.pager .ttl{font-family:var(--display);font-size:15px;font-weight:600}
+.pager .next{text-align:right}
+
+/* 首页 */
+.hero{padding-block:48px 8px}
+.toc{display:grid;gap:10px;margin:0 0 40px;padding:0;list-style:none}
+.toc a{display:flex;gap:14px;align-items:baseline;text-decoration:none;border:1px solid var(--rule);
+  border-radius:10px;padding:14px 16px;background:var(--surface);color:var(--ink)}
+.toc a:hover{border-color:var(--accent)}
+.toc .num{font-family:var(--mono);font-size:13px;color:var(--accent);flex:none;font-weight:600}
+.toc .body{min-width:0}
+.toc .ttl{font-family:var(--display);font-weight:600;font-size:16px;display:block;line-height:1.4}
+.toc .sub2{font-size:13.5px;color:var(--muted);display:block;margin-top:2px}
+.disclaim{border:1px solid color-mix(in srgb,var(--weak) 35%,var(--rule));border-radius:10px;
+  padding:16px 18px;margin:0 0 32px;background:var(--warnbg);font-size:14.5px}
+.disclaim strong{color:var(--weak)}
+footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--rule);
+  font-size:13.5px;color:var(--muted)}
+footer a{color:var(--muted)}
+@media (max-width:520px){
+  body{font-size:16px}
+  .plain{font-size:16.5px;padding:18px 18px}
+  .brand span{display:none}
+  .topbar .wrap{padding-block:8px;gap:8px;flex-wrap:nowrap}
+  .topnav{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  .topnav::-webkit-scrollbar{display:none}
+  .topnav a{font-size:11.5px;padding:3px 6px;min-width:0;flex:none}
+}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="wrap"><a class="brand" href="index.html">弱熵的统一规律 <span>· 一门可以自己跑的课</span></a><nav class="topnav"><a href="index.html">目录</a><a href="01-recompute.html" title="不是碰撞，是重算">01</a><a href="02-milk-sad.html" title="强随机数没有「第一个钱包」">02</a><a href="03-ill-bloom.html" title="一个坏掉的随机数，活了十二年">03</a><a href="04-trust-wallet.html" title="2³² 到底有多小">04</a><a href="05-cake-wallet.html" title="不安全的那个是默认值">05</a><a href="06-php-mt-rand.html" title="同一段代码，三个弱钱包范围">06</a><a href="07-brainwallet.html" title="人选的口令">07</a><a href="08-coldcard.html" title="这次失败，恰恰来自那个冲突的缺席">08</a><a href="09-xor.html" aria-current="page" title="XOR 不生产随机性">09</a><a href="10-pbkdf2.html" title="PBKDF2 救不了你">10</a><a href="11-five-guards.html" title="五道保险，五道都没响">11</a><a href="12-attribution.html" title="从链上反推到是哪个软件">12</a><a href="13-attacker-tempo.html" title="攻击者的节奏">13</a><a href="14-prediction.html" title="一个可证伪的赌注">14</a></nav></div></header>
+<main class="wrap">
+<div class="lesson-head">
+<p class="kicker">第 09 课 / 共 14 课</p>
+<h1>XOR 不生产随机性</h1>
+<p class="sub">H(A⊕B) ≤ H(A) + H(B)</p>
+</div>
+<div class="plain"><span class="tag">大白话</span><p>上一课那句「把两个软件生成器混在一起等于什么都没混」，这一课把它证明出来。</p>
+<p>很多人对 XOR 有一个直觉：把几个随机源混在一起，总比用一个强。</p>
+<p>这个直觉在<strong>一个条件下</strong>是对的：至少有一个源本来就是强的。</p>
+<p>否则，XOR 是个搅拌器，不是个泵。<strong>它能把熵混匀，不能把熵变多。</strong></p>
+<p>这一课不讲公式，讲穷举 —— 代码会把两个小 PRNG 的全部输出枚举一遍，<br>数出 XOR 之后到底有多少条不同的流。你不用相信我。</p></div>
+<h2>往下一层</h2>
+<h3>三种情形，代码全部穷举</h3>
+<table><thead><tr><th>情形</th><th>结果</th></tr></thead><tbody>
+<tr><td>两个 PRNG <strong>各自独立</strong>播种</td><td>XOR 的空间 = |A| × |B|，一位不差。加分是真的</td></tr>
+<tr><td>两个 PRNG 从<strong>同一个</strong>种子出发</td><td>XOR 的空间 = 种子空间。<strong>一位都没加</strong></td></tr>
+<tr><td>一个强 + 一个弱</td><td>强的那个把结果整个撑起来。这是加固的本意</td></tr>
+</tbody></table>
+
+<h3>Coldcard 落在第二行</h3>
+<p>链接期把调用绑到软件 PRNG 之后，两个操作数都是从同一台机器、同一次开机的那几个
+不保密的 32 位值算出来的。<strong>它们不是独立的两个熵源，是同一个熵源的两个函数。</strong></p>
+<p>更糟的是：芯片标识符和 SysTick 本身也是 XOR 进同一个 32 位字里的，所以它们也会互相抵消。
+课程代码会给你看一对具体的例子：两台不同的芯片、两个不同的时刻，<strong>种子完全相同</strong>。</p>
+<p>整条链上 XOR 出现了两次，两次都没有增加任何东西。</p>
+
+<div class="callout">
+<h4>一条可以直接拿来用的检查</h4>
+<p>「我们混合了多个熵源」这句话<strong>本身不构成任何保证</strong>。
+要让混合有意义，必须能回答：<strong>这些源里，哪一个是不可预测的？</strong></p>
+<ul>
+<li>✅ 系统 CSPRNG，直接用，不混 —— 不需要论证</li>
+<li>✅ 硬件 TRNG XOR 系统 CSPRNG —— 两个都强，怎么混都对</li>
+<li>⚠️ 混了时间、鼠标移动、进程 ID、设备序列号 —— 全部可观测，和 = 0</li>
+<li>❌ 混了两个 PRNG —— 这就是第 8 课</li>
+</ul>
+</div>
+<h2>自己跑一下</h2>
+<div class="run">
+<div class="run-item"><div class="cmdbar"><code>python3 lessons/09_xor/xor_entropy.py</code><button class="copy" type="button">复制</button></div><p>穷举三种情形，数出 XOR 之后的实际空间大小。还会看到一个「禁止的种子值静默吃掉熵」的小陷阱。</p></div>
+</div>
+<h2>数字与出处</h2>
+<div class="tw"><table><thead><tr><th>数字</th><th>是什么</th><th>出处</th><th>证据</th></tr></thead><tbody>
+<tr><td><strong>H(A⊕B) ≤ H(A)+H(B)</strong></td><td>信息论上界</td><td>本课代码逐一穷举验证</td><td><span class="ev ev-s">很强（可自证）</span></td></tr>
+</tbody></table></div>
+<div class="takeaway"><span class="tag">带走这个</span><p>下一课是同类的另一个直觉错误，而且更常见：<br>「就算熵弱一点，可是还有 KDF 拉伸啊。」</p></div>
+<nav class="pager">
+<a href="08-coldcard.html"><span class="dir">← 上一课</span><span class="ttl">这次失败，恰恰来自那个冲突的缺席</span></a>
+<a class="next" href="10-pbkdf2.html"><span class="dir">下一课 →</span><span class="ttl">PBKDF2 救不了你</span></a>
+</nav>
+<div class="disclaim"><strong>免责：</strong>本课复现的是<strong>已被公开披露并已修复</strong>的历史缺陷，用于教学。固定 demo 种子，不联网，不碰任何真实密钥。如果你怀疑自己的钱包受影响，不要用这里的代码去验证 —— 去看厂商官方公告。</div><footer><p>弱熵的统一规律 · 代码与动图：<a href="https://github.com/aaron-recompile/weak-entropy-lessons">GitHub</a>。每一课的代码都能用 <code>python3</code> 一行跑出结果。</p><p>所有数字带出处和证据分级。标「弱」的不要单独使用。</p></footer>
+</main>
+<script>
+document.querySelectorAll('.copy').forEach(function(b){
+  b.addEventListener('click', function(){
+    var t = b.closest('.cmdbar').querySelector('code').textContent;
+    function done(){ b.dataset.done='1'; b.textContent='已复制';
+      setTimeout(function(){ delete b.dataset.done; b.textContent='复制'; }, 1600); }
+    try {
+      navigator.clipboard.writeText(t).then(done, select);
+    } catch(e){ select(); }
+    function select(){
+      var r=document.createRange(); r.selectNodeContents(b.closest('.cmdbar').querySelector('code'));
+      var s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent='已选中，按 ⌘C';
+      setTimeout(function(){ b.textContent='复制'; }, 2400);
+    }
+  });
+});
+</script>
+</body>
+</html>

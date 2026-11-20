@@ -2,6 +2,8 @@
 
 > 十三年，十一个独立案例，十一个不同的团队，**没有一次把密码学写错**。
 > 每一次都是在操作系统的随机数接口外面包了一层。
+>
+> 而攻击者不是在猜你的钥匙 —— 他是在**重新运行当年生成你钥匙的那段代码**。
 
 一门可以自己跑的课。每一课配一段**真的能跑出结果**的最小代码 —— 不是伪代码，
 是跑完就看见弱钥匙被算出来的那种。
@@ -28,34 +30,36 @@
 ```sh
 git clone https://github.com/aaron-recompile/weak-entropy-lessons.git
 cd weak-entropy-lessons
-./run_all.sh -q            # 十二课全部跑一遍，约 40 秒
-python3 lessons/01_milk_sad/milk_sad.py
+./run_all.sh -q            # 十四课全部跑一遍，约 45 秒
+python3 lessons/01_recompute/recompute.py
 ```
 
-第 7 课另外需要一个 C 编译器和 make（macOS / Linux 自带）：
+第 8 课另外需要一个 C 编译器和 make（macOS / Linux 自带）：
 
 ```sh
-cd lessons/07_coldcard_link && make all
+cd lessons/08_coldcard_link && make all
 ```
 
 ---
 
-## 十二课
+## 十四课
 
 | # | 课 | 案例 | 跑什么 |
 |---|---|---|---|
-| 01 | [强随机数没有「第一个钱包」](lessons/01_milk_sad/) | bx seed / Milk Sad，CVE-2023-39910 | 逐字复现 `milk sad wage cup…`，然后几秒内反推出一把钥匙 |
-| 02 | [一个坏掉的随机数，活了十二年](lessons/02_ill_bloom/) | CryptoJS / Ill Bloom，CVE-2026-71851 | 复现 `illness blossom…`，Python 与原版 JS 逐字节对照 |
-| 03 | [2³² 到底有多小](lessons/03_trust_wallet_wasm/) | Trust Wallet 扩展，CVE-2023-31290 | 建一张迷你彩虹表，微秒级查表还原种子 |
-| 04 | [不安全的那个是默认值](lessons/04_cake_wallet/) | Cake Wallet | **把整个 2²⁰ 空间走完**（约 2 秒） |
-| 05 | [同一段代码，三个弱钱包范围](lessons/05_php_mt_rand/) | PHPCoinAddress | MT_RAND_PHP 对 MT_RAND_MT19937，数出一半输出不同 |
-| 06 | [人选的口令](lessons/06_brainwallet/) | 脑钱包 | 从地址反推口令，顺便看曲线乘法有多贵 |
-| 07 | [这次失败，恰恰来自那个冲突的缺席](lessons/07_coldcard_link/) | **Coldcard** | **C + Makefile 复现链接期符号绑错**，去掉 `static` → 构建直接失败 |
-| 08 | [XOR 不生产随机性](lessons/08_xor/) | — | 穷举三种情形，数出 XOR 之后的真实空间 |
-| 09 | [PBKDF2 救不了你](lessons/09_pbkdf2/) | — | 在本机量出那个常数值几位熵（答案：十位以内） |
-| 10 | [五道保险，五道都没响](lessons/10_five_guards/) | Coldcard | 四个真的统计检验，对弱 PRNG **全部通过** |
-| 11 | [攻击者的节奏](lessons/11_attacker_tempo/) | 全部 | 量出攻防不对称 —— 反应窗口为什么以年计 |
-| 12 | [一个可证伪的赌注](lessons/12_prediction/) | — | 包装层嗅探器 + 一个你自己能跑的取样实验 |
+| 01 | [不是碰撞，是重算](lessons/01_recompute/) | — | **后面十三课的第一性原理**：算出碰撞概率，再看同一个生成器两次跑出字节级相同的钥匙 |
+| 02 | [强随机数没有「第一个钱包」](lessons/02_milk_sad/) | bx seed / Milk Sad，CVE-2023-39910 | 逐字复现 `milk sad wage cup…`，然后几秒内反推出一把钥匙 |
+| 03 | [一个坏掉的随机数，活了十二年](lessons/03_ill_bloom/) | CryptoJS / Ill Bloom，CVE-2026-71851 | 复现 `illness blossom…`，Python 与原版 JS 逐字节对照 |
+| 04 | [2³² 到底有多小](lessons/04_trust_wallet_wasm/) | Trust Wallet 扩展，CVE-2023-31290 | 建一张迷你彩虹表，微秒级查表还原种子 |
+| 05 | [不安全的那个是默认值](lessons/05_cake_wallet/) | Cake Wallet | **把整个 2²⁰ 空间走完**（约 2 秒） |
+| 06 | [同一段代码，三个弱钱包范围](lessons/06_php_mt_rand/) | PHPCoinAddress | MT_RAND_PHP 对 MT_RAND_MT19937，数出一半输出不同 |
+| 07 | [人选的口令](lessons/07_brainwallet/) | 脑钱包 | 从地址反推口令，顺便看曲线乘法有多贵 |
+| 08 | [这次失败，恰恰来自那个冲突的缺席](lessons/08_coldcard_link/) | **Coldcard** | **C + Makefile 复现链接期符号绑错**，去掉 `static` → 构建直接失败 |
+| 09 | [XOR 不生产随机性](lessons/09_xor/) | — | 穷举三种情形，数出 XOR 之后的真实空间 |
+| 10 | [PBKDF2 救不了你](lessons/10_pbkdf2/) | — | 在本机量出那个常数值几位熵（答案：十位以内） |
+| 11 | [五道保险，五道都没响](lessons/11_five_guards/) | Coldcard | 四个真的统计检验，对弱 PRNG **全部通过** |
+| 12 | [从链上反推到是哪个软件](lessons/12_attribution/) | Ill Bloom 的五个应用 | 算出「96% 持有同一代币」这个信号有多强；看嗅探器分不开两个依赖相同的文件 |
+| 13 | [攻击者的节奏](lessons/13_attacker_tempo/) | 全部 | 量出攻防不对称；**为什么攻击者要等三到六年** |
+| 14 | [一个可证伪的赌注](lessons/14_prediction/) | — | 包装层嗅探器 + 一个你自己能跑的取样实验 |
 
 ---
 
@@ -97,7 +101,7 @@ run_all.sh         把十二课全部跑一遍
 - **Wizardsardine** Coldcard 逐 commit 解剖，2026-08-11（Loïc Morel）
 - **Coinkite** 官方公告，2026-07-30
 - **Ledger Donjon** Trust Wallet 扩展复盘，2023-04-25
-- **Coinspect** — `illbloom.org`、`unlukey.org`
+- **Coinspect** — `illbloom.org`（含归因文和中文助记词盗转分析，本课程已读原文）、`unlukey.org`
 - CVE-2023-39910 / CVE-2023-31290 / CVE-2024-23660 / CVE-2026-71851
 
 ## 这门课从哪来
